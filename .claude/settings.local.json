@@ -7,7 +7,9 @@
       "Bash(mkdir:*)",
       "Bash(python:*)",
       "Bash(uv run:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(uv sync:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

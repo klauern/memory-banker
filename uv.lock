@@ -511,7 +511,7 @@ wheels = [
 [[package]]
 name = "memory-banker"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "click" },
     { name = "openai-agents", extra = ["litellm"] },
