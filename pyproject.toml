@@ -1,0 +1,21 @@
+[project]
+name = "memory-banker"
+version = "0.1.0"
+description = "Agentically create Cline-style memory banks for projects"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "click>=8.2.1",
+    "openai-agents[litellm]>=0.0.17",
+]
+
+[project.scripts]
+memory-banker = "main:cli"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.0",
+    "pytest-asyncio>=1.0.0",
+    "pytest-cov>=6.2.0",
+    "pytest-mock>=3.14.1",
+]

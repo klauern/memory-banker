@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.cline.bot)",
+      "Bash(uv add:*)",
+      "Bash(uv python pin:*)",
+      "Bash(mkdir:*)",
+      "Bash(python:*)",
+      "Bash(uv run:*)",
+      "Bash(rm:*)"
+    ],
+    "deny": []
+  }
+}
