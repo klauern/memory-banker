@@ -31,7 +31,24 @@ Memory banks are structured documentation files that help AI assistants understa
 - Python 3.13 or higher
 - OpenAI API key
 
-### Using uv (Recommended)
+### Global Installation (Recommended)
+
+For global access to the `memory-banker` command from anywhere:
+
+```bash
+git clone https://github.com/yourusername/memory-banker.git
+cd memory-banker
+uv tool install .
+```
+
+After this, `memory-banker` will be available globally. To uninstall later:
+```bash
+uv tool uninstall memory-banker
+```
+
+### Local Development Installation
+
+For local development and testing:
 
 ```bash
 git clone https://github.com/yourusername/memory-banker.git
@@ -39,9 +56,7 @@ cd memory-banker
 uv sync
 ```
 
-This will install the package and make the `memory-banker` command available.
-
-### Using pip
+### Alternative: Using pip
 
 ```bash
 git clone https://github.com/yourusername/memory-banker.git
@@ -58,11 +73,11 @@ pip install -e .
 
 2. **Initialize a memory bank for your project:**
    ```bash
-   # Using uv (recommended)
-   uv run memory-banker init
-   
-   # Or if installed globally
+   # If installed globally (recommended)
    memory-banker init
+   
+   # If using local development setup
+   uv run memory-banker init
    ```
 
 3. **Check the generated files:**
@@ -134,12 +149,15 @@ Any model supported by the OpenAI Agents framework:
 
 ```
 memory-banker/
-├── main.py              # CLI entry point
 ├── memory_banker/       # Core package
-│   ├── __init__.py
+│   ├── __init__.py     # Package exports
+│   ├── main.py         # CLI entry point
 │   ├── cli.py          # CLI implementation
 │   ├── agents.py       # AI agents for analysis
 │   └── memory_bank.py  # Memory bank file management
+├── tests/              # Test suite
+│   ├── unit/           # Unit tests
+│   └── integration/    # Integration tests
 ├── pyproject.toml      # Project configuration
 └── README.md          # This file
 ```
@@ -206,7 +224,10 @@ Currently implementing the user authentication system using JWT tokens...
 
 **Import Errors**:
 ```bash
-# Make sure you're in the right environment
+# If installed globally
+memory-banker --help
+
+# If using local development setup
 uv run memory-banker --help
 ```
 
@@ -230,18 +251,35 @@ ls -la
 
 ## Development
 
-### Running Tests
-
-```bash
-uv run pytest
-```
-
 ### Installing for Development
 
 ```bash
 git clone https://github.com/yourusername/memory-banker.git
 cd memory-banker
 uv sync --dev
+```
+
+### Running Tests
+
+```bash
+uv run pytest
+```
+
+### Local Testing
+
+Test the CLI locally during development:
+```bash
+uv run memory-banker --help
+uv run memory-banker init
+```
+
+### Global Installation for Testing
+
+To test the global installation:
+```bash
+uv tool install .
+memory-banker --help
+uv tool uninstall memory-banker  # When done testing
 ```
 
 ## Contributing

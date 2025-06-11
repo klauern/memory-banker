@@ -4,7 +4,7 @@ from typing import Optional
 
 import click
 
-from memory_banker.cli import MemoryBankerCLI
+from .cli import MemoryBankerCLI
 
 
 @click.group()

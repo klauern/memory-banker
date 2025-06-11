@@ -5,7 +5,7 @@ from click.testing import CliRunner
 from unittest.mock import patch, Mock, AsyncMock
 from pathlib import Path
 
-from main import cli
+from memory_banker.main import cli
 
 
 class TestCLIInterface:
@@ -70,8 +70,16 @@ class TestCLIInterface:
 
         assert result.exit_code != 0
         assert "Invalid value" in result.output
+<<<<<<< ours
 
     @patch("main.MemoryBankerCLI")
+||||||| ancestor
+    
+    @patch('main.MemoryBankerCLI')
+=======
+    
+    @patch('memory_banker.main.MemoryBankerCLI')
+>>>>>>> theirs
     def test_parameter_passing(self, mock_cli_class, runner, temp_project_dir):
         """Test that CLI parameters are passed correctly to MemoryBankerCLI."""
         # Mock to prevent actual instantiation
@@ -101,11 +109,21 @@ class TestCLIInterface:
             api_key="test-key",
             timeout=600,
         )
+<<<<<<< ours
 
     @patch("main.MemoryBankerCLI")
     def test_environment_api_key(
         self, mock_cli_class, runner, temp_project_dir, monkeypatch
     ):
+||||||| ancestor
+    
+    @patch('main.MemoryBankerCLI')
+    def test_environment_api_key(self, mock_cli_class, runner, temp_project_dir, monkeypatch):
+=======
+    
+    @patch('memory_banker.main.MemoryBankerCLI')
+    def test_environment_api_key(self, mock_cli_class, runner, temp_project_dir, monkeypatch):
+>>>>>>> theirs
         """Test that API key is read from environment."""
         monkeypatch.setenv("OPENAI_API_KEY", "env-api-key")
 
@@ -117,12 +135,24 @@ class TestCLIInterface:
 
         # Should use environment API key
         args, kwargs = mock_cli_class.call_args
+<<<<<<< ours
         assert kwargs["api_key"] == "env-api-key"
 
     @patch("main.MemoryBankerCLI")
     def test_default_values(
         self, mock_cli_class, runner, temp_project_dir, monkeypatch
     ):
+||||||| ancestor
+        assert kwargs['api_key'] == 'env-api-key'
+    
+    @patch('main.MemoryBankerCLI')
+    def test_default_values(self, mock_cli_class, runner, temp_project_dir, monkeypatch):
+=======
+        assert kwargs['api_key'] == 'env-api-key'
+    
+    @patch('memory_banker.main.MemoryBankerCLI')
+    def test_default_values(self, mock_cli_class, runner, temp_project_dir, monkeypatch):
+>>>>>>> theirs
         """Test CLI default values."""
         monkeypatch.setenv("OPENAI_API_KEY", "test-key")
 
