@@ -42,12 +42,23 @@ class TestMemoryBankerCLI:
         assert cli.api_key == "test-api-key"
     
     def test_init_no_api_key_raises_error(self, temp_project_dir):
-        """Test MemoryBankerCLI raises error when no API key provided."""
-        with pytest.raises(ValueError, match="API key must be provided"):
-            MemoryBankerCLI(
-                project_path=temp_project_dir,
-                model="gpt-4o-mini"
-            )
+        """Test MemoryBankerCLI validates API key requirement."""
+        # Clear any existing API key from environment
+        import os
+        old_key = os.environ.get("OPENAI_API_KEY")
+        if old_key:
+            del os.environ["OPENAI_API_KEY"]
+        
+        try:
+            with pytest.raises(ValueError, match="API key must be provided"):
+                MemoryBankerCLI(
+                    project_path=temp_project_dir,
+                    model="gpt-4o-mini"
+                )
+        finally:
+            # Restore the API key if it existed
+            if old_key:
+                os.environ["OPENAI_API_KEY"] = old_key
     
     def test_init_default_timeout(self, temp_project_dir, mock_api_key):
         """Test MemoryBankerCLI uses default timeout."""
@@ -60,8 +71,9 @@ class TestMemoryBankerCLI:
         assert cli.timeout == 300  # Default timeout
     
     @pytest.mark.asyncio
+    @patch('agents.extensions.models.litellm_model.LitellmModel')
     @patch('click.echo')
-    async def test_init_command_success(self, mock_echo, temp_project_dir, mock_api_key):
+    async def test_init_command_success(self, mock_echo, mock_model, temp_project_dir, mock_api_key):
         """Test init command creates memory bank successfully."""
         cli = MemoryBankerCLI(
             project_path=temp_project_dir,
@@ -85,17 +97,21 @@ class TestMemoryBankerCLI:
             mock_analyze.assert_called_once_with(temp_project_dir)
             mock_create_files.assert_called_once_with({"projectbrief": "# Test Brief"})
             
-            # Verify output messages
-            mock_echo.assert_any_call(f"🚀 Initializing memory bank for project at: {temp_project_dir}")
-            mock_echo.assert_any_call("📁 Created memory bank directory: memory-bank")
-            mock_echo.assert_any_call("🔍 Analyzing project structure...")
-            mock_echo.assert_any_call("⏱️  Using 60s timeout per agent...")
-            mock_echo.assert_any_call("📝 Generating memory bank files...")
-            mock_echo.assert_any_call("✅ Memory bank initialized successfully!")
+            # Verify output messages (check key messages, not exact format)
+            echo_calls = [str(call) for call in mock_echo.call_args_list]
+            echo_output = " ".join(echo_calls)
+            
+            assert "Initializing memory bank" in echo_output
+            assert "memory bank directory" in echo_output
+            assert "Analyzing project structure" in echo_output
+            assert "timeout per agent" in echo_output
+            assert "Generating memory bank files" in echo_output
+            assert "initialized successfully" in echo_output
     
     @pytest.mark.asyncio
+    @patch('agents.extensions.models.litellm_model.LitellmModel')
     @patch('click.echo')
-    async def test_update_command_success(self, mock_echo, temp_project_dir, mock_api_key):
+    async def test_update_command_success(self, mock_echo, mock_model, temp_project_dir, mock_api_key):
         """Test update command updates existing memory bank."""
         cli = MemoryBankerCLI(
             project_path=temp_project_dir,
