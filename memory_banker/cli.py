@@ -181,9 +181,6 @@ def refresh(ctx):
 
 def main():
     """Entry point for the memory-banker CLI tool"""
-    import litellm
-
-    litellm._turn_on_debug()
 
     # Check if custom API base is being used and disable tracing preemptively
     # This must be done before any openai-agents imports
