@@ -1,0 +1,226 @@
+{
+  "rules": [
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "code_context",
+      "description": "Always include context about what code does and why, especially for complex logic",
+      "example": "// This function handles user authentication by validating JWT tokens\n// and checking against our Redis cache for session management",
+      "priority": "high",
+      "service": "Cursor",
+      "title": "Provide Clear Context in Comments"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "file_organization",
+      "description": "Names should clearly indicate purpose and functionality",
+      "example": "getUserAuthenticationStatus() instead of checkUser()",
+      "priority": "medium",
+      "service": "Cursor",
+      "title": "Use Descriptive File and Function Names"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "error_handling",
+      "description": "Always handle edge cases and provide meaningful error messages",
+      "example": "try {\n  // operation\n} catch (error) {\n  logger.error('Failed to process user data:', error);\n  throw new ProcessingError('User data validation failed', error);\n}",
+      "priority": "high",
+      "service": "Cursor",
+      "title": "Implement Comprehensive Error Handling"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "code_consistency",
+      "description": "Maintain consistency with existing codebase patterns and conventions",
+      "example": "If the codebase uses async/await pattern, continue using it consistently",
+      "priority": "high",
+      "service": "Windsurf",
+      "title": "Follow Established Patterns"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "dependency_management",
+      "description": "Prefer built-in solutions over external libraries when reasonable",
+      "example": "Use native JSON parsing instead of adding a JSON library",
+      "priority": "medium",
+      "service": "Windsurf",
+      "title": "Minimize External Dependencies"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "performance",
+      "description": "Design code to perform well for the most frequent operations",
+      "example": "Cache frequently accessed data, use efficient data structures",
+      "priority": "medium",
+      "service": "Windsurf",
+      "title": "Optimize for Common Use Cases"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "testing",
+      "description": "Every public function should have corresponding unit tests",
+      "example": "test('should authenticate valid user', async () => {\n  const result = await authenticateUser(validCredentials);\n  expect(result.success).toBe(true);\n});",
+      "priority": "high",
+      "service": "Copilot",
+      "title": "Write Tests for All Public Functions"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "documentation",
+      "description": "Use JSDoc, docstrings, or similar to document function interfaces",
+      "example": "/**\n * Authenticates a user with provided credentials\n * @param {Object} credentials - User credentials\n * @param {string} credentials.username - Username\n * @param {string} credentials.password - Password\n * @returns {Promise<AuthResult>} Authentication result\n */",
+      "priority": "medium",
+      "service": "Copilot",
+      "title": "Document Function Parameters and Return Values"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "security",
+      "description": "Never trust user input; always validate and sanitize",
+      "example": "if (!username || typeof username !== 'string' || username.length > 100) {\n  throw new ValidationError('Invalid username');\n}",
+      "priority": "high",
+      "service": "Copilot",
+      "title": "Validate All User Inputs"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "code_clarity",
+      "description": "Make code intentions clear and avoid implicit behaviors",
+      "example": "Use explicit type annotations, clear variable names, and obvious control flow",
+      "priority": "high",
+      "service": "Claude",
+      "title": "Prefer Explicit Over Implicit"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "modularity",
+      "description": "Create modular, composable functions that can be easily reused",
+      "example": "Break large functions into smaller, focused functions with single responsibilities",
+      "priority": "medium",
+      "service": "Claude",
+      "title": "Design for Reusability"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "configuration",
+      "description": "Externalize configuration to make code more flexible and maintainable",
+      "example": "Use .env files, config.json, or similar for environment-specific settings",
+      "priority": "medium",
+      "service": "Claude",
+      "title": "Use Configuration Files for Settings"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "code_review",
+      "description": "Adhere to established conventions for the programming language in use",
+      "example": "Python: Use snake_case, follow PEP 8. JavaScript: Use camelCase, follow ESLint rules",
+      "priority": "high",
+      "service": "General",
+      "title": "Follow Language-Specific Best Practices"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "git_practices",
+      "description": "Commit messages should explain what and why, not just what",
+      "example": "'Add user authentication validation' instead of 'Update auth.js'",
+      "priority": "medium",
+      "service": "General",
+      "title": "Write Meaningful Commit Messages"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "logging",
+      "description": "Use consistent logging levels and structured data for better debugging",
+      "example": "logger.info('User authenticated', { userId, timestamp, method: 'oauth' })",
+      "priority": "medium",
+      "service": "General",
+      "title": "Implement Structured Logging"
+    },
+    {
+      "applies_to": [
+        "web",
+        "api"
+      ],
+      "category": "api_design",
+      "description": "Follow REST principles for API design when building web services",
+      "example": "GET /users/:id for retrieval, POST /users for creation, PUT /users/:id for updates",
+      "priority": "medium",
+      "service": "General",
+      "title": "Design RESTful APIs"
+    },
+    {
+      "applies_to": [
+        "database"
+      ],
+      "category": "database",
+      "description": "Version control database schema changes with migration files",
+      "example": "Create migration files for schema changes, never modify existing migrations",
+      "priority": "high",
+      "service": "General",
+      "title": "Use Database Migrations"
+    },
+    {
+      "applies_to": [
+        "frontend",
+        "web"
+      ],
+      "category": "frontend",
+      "description": "Ensure UI works across different screen sizes and devices",
+      "example": "Use CSS Grid/Flexbox, media queries, and mobile-first design principles",
+      "priority": "medium",
+      "service": "General",
+      "title": "Implement Responsive Design"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "collaboration",
+      "description": "Provide type information to help other developers understand interfaces",
+      "example": "TypeScript interfaces, Python type hints, or language-specific type systems",
+      "priority": "medium",
+      "service": "General",
+      "title": "Use Type Annotations"
+    },
+    {
+      "applies_to": [
+        "all"
+      ],
+      "category": "collaboration",
+      "description": "Provide clear instructions for setting up the development environment",
+      "example": "README with prerequisites, installation steps, and getting started guide",
+      "priority": "high",
+      "service": "General",
+      "title": "Include Setup Instructions"
+    }
+  ]
+}

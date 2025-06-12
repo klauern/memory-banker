@@ -1,13 +1,15 @@
 """
 AI Service Rules and Patterns for Memory Bank Enhancement
 
-This module contains common rules, patterns, and best practices from various AI
-coding assistants (Windsurf, Cursor, Copilot, Claude, etc.) that can be integrated
-into memory bank generation to provide better context and guidance.
+This module provides functionality to load and work with AI service rules
+that are stored in an external JSON configuration file. This approach improves
+maintainability, load performance, and allows for easier rule updates.
 """
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 
 @dataclass
@@ -26,200 +28,45 @@ class ServiceRule:
 class AIServiceRules:
     """Collection of rules and patterns from various AI coding services"""
 
-    def __init__(self):
-        self.rules = self._initialize_rules()
+    def __init__(self, rules_file: Optional[Path] = None):
+        """
+        Initialize AI service rules from external JSON file
 
-    def _initialize_rules(self) -> list[ServiceRule]:
-        """Initialize the comprehensive set of AI service rules"""
-        return [
-            # === CURSOR RULES ===
-            ServiceRule(
-                service="Cursor",
-                category="code_context",
-                title="Provide Clear Context in Comments",
-                description="Always include context about what code does and why, especially for complex logic",
-                example="// This function handles user authentication by validating JWT tokens\n// and checking against our Redis cache for session management",
-                priority="high",
-                applies_to=["all"],
-            ),
-            ServiceRule(
-                service="Cursor",
-                category="file_organization",
-                title="Use Descriptive File and Function Names",
-                description="Names should clearly indicate purpose and functionality",
-                example="getUserAuthenticationStatus() instead of checkUser()",
-                priority="medium",
-                applies_to=["all"],
-            ),
-            ServiceRule(
-                service="Cursor",
-                category="error_handling",
-                title="Implement Comprehensive Error Handling",
-                description="Always handle edge cases and provide meaningful error messages",
-                example="try {\n  // operation\n} catch (error) {\n  logger.error('Failed to process user data:', error);\n  throw new ProcessingError('User data validation failed', error);\n}",
-                priority="high",
-                applies_to=["all"],
-            ),
-            # === WINDSURF RULES ===
-            ServiceRule(
-                service="Windsurf",
-                category="code_consistency",
-                title="Follow Established Patterns",
-                description="Maintain consistency with existing codebase patterns and conventions",
-                example="If the codebase uses async/await pattern, continue using it consistently",
-                priority="high",
-                applies_to=["all"],
-            ),
-            ServiceRule(
-                service="Windsurf",
-                category="dependency_management",
-                title="Minimize External Dependencies",
-                description="Prefer built-in solutions over external libraries when reasonable",
-                example="Use native JSON parsing instead of adding a JSON library",
-                priority="medium",
-                applies_to=["all"],
-            ),
-            ServiceRule(
-                service="Windsurf",
-                category="performance",
-                title="Optimize for Common Use Cases",
-                description="Design code to perform well for the most frequent operations",
-                example="Cache frequently accessed data, use efficient data structures",
-                priority="medium",
-                applies_to=["all"],
-            ),
-            # === COPILOT RULES ===
-            ServiceRule(
-                service="Copilot",
-                category="testing",
-                title="Write Tests for All Public Functions",
-                description="Every public function should have corresponding unit tests",
-                example="test('should authenticate valid user', async () => {\n  const result = await authenticateUser(validCredentials);\n  expect(result.success).toBe(true);\n});",
-                priority="high",
-                applies_to=["all"],
-            ),
-            ServiceRule(
-                service="Copilot",
-                category="documentation",
-                title="Document Function Parameters and Return Values",
-                description="Use JSDoc, docstrings, or similar to document function interfaces",
-                example="/**\n * Authenticates a user with provided credentials\n * @param {Object} credentials - User credentials\n * @param {string} credentials.username - Username\n * @param {string} credentials.password - Password\n * @returns {Promise<AuthResult>} Authentication result\n */",
-                priority="medium",
-                applies_to=["all"],
-            ),
-            ServiceRule(
-                service="Copilot",
-                category="security",
-                title="Validate All User Inputs",
-                description="Never trust user input; always validate and sanitize",
-                example="if (!username || typeof username !== 'string' || username.length > 100) {\n  throw new ValidationError('Invalid username');\n}",
-                priority="high",
-                applies_to=["all"],
-            ),
-            # === CLAUDE RULES ===
-            ServiceRule(
-                service="Claude",
-                category="code_clarity",
-                title="Prefer Explicit Over Implicit",
-                description="Make code intentions clear and avoid implicit behaviors",
-                example="Use explicit type annotations, clear variable names, and obvious control flow",
-                priority="high",
-                applies_to=["all"],
-            ),
-            ServiceRule(
-                service="Claude",
-                category="modularity",
-                title="Design for Reusability",
-                description="Create modular, composable functions that can be easily reused",
-                example="Break large functions into smaller, focused functions with single responsibilities",
-                priority="medium",
-                applies_to=["all"],
-            ),
-            ServiceRule(
-                service="Claude",
-                category="configuration",
-                title="Use Configuration Files for Settings",
-                description="Externalize configuration to make code more flexible and maintainable",
-                example="Use .env files, config.json, or similar for environment-specific settings",
-                priority="medium",
-                applies_to=["all"],
-            ),
-            # === GENERAL AI ASSISTANT RULES ===
-            ServiceRule(
-                service="General",
-                category="code_review",
-                title="Follow Language-Specific Best Practices",
-                description="Adhere to established conventions for the programming language in use",
-                example="Python: Use snake_case, follow PEP 8. JavaScript: Use camelCase, follow ESLint rules",
-                priority="high",
-                applies_to=["all"],
-            ),
-            ServiceRule(
-                service="General",
-                category="git_practices",
-                title="Write Meaningful Commit Messages",
-                description="Commit messages should explain what and why, not just what",
-                example="'Add user authentication validation' instead of 'Update auth.js'",
-                priority="medium",
-                applies_to=["all"],
-            ),
-            ServiceRule(
-                service="General",
-                category="logging",
-                title="Implement Structured Logging",
-                description="Use consistent logging levels and structured data for better debugging",
-                example="logger.info('User authenticated', { userId, timestamp, method: 'oauth' })",
-                priority="medium",
-                applies_to=["all"],
-            ),
-            # === FRAMEWORK-SPECIFIC RULES ===
-            ServiceRule(
-                service="General",
-                category="api_design",
-                title="Design RESTful APIs",
-                description="Follow REST principles for API design when building web services",
-                example="GET /users/:id for retrieval, POST /users for creation, PUT /users/:id for updates",
-                priority="medium",
-                applies_to=["web", "api"],
-            ),
-            ServiceRule(
-                service="General",
-                category="database",
-                title="Use Database Migrations",
-                description="Version control database schema changes with migration files",
-                example="Create migration files for schema changes, never modify existing migrations",
-                priority="high",
-                applies_to=["database"],
-            ),
-            ServiceRule(
-                service="General",
-                category="frontend",
-                title="Implement Responsive Design",
-                description="Ensure UI works across different screen sizes and devices",
-                example="Use CSS Grid/Flexbox, media queries, and mobile-first design principles",
-                priority="medium",
-                applies_to=["frontend", "web"],
-            ),
-            # === COLLABORATION RULES ===
-            ServiceRule(
-                service="General",
-                category="collaboration",
-                title="Use Type Annotations",
-                description="Provide type information to help other developers understand interfaces",
-                example="TypeScript interfaces, Python type hints, or language-specific type systems",
-                priority="medium",
-                applies_to=["all"],
-            ),
-            ServiceRule(
-                service="General",
-                category="collaboration",
-                title="Include Setup Instructions",
-                description="Provide clear instructions for setting up the development environment",
-                example="README with prerequisites, installation steps, and getting started guide",
-                priority="high",
-                applies_to=["all"],
-            ),
-        ]
+        Args:
+            rules_file: Path to the JSON file containing rules. If None, uses default location.
+        """
+        if rules_file is None:
+            # Use the JSON file in the same directory as this module
+            rules_file = Path(__file__).parent / "ai_service_rules.json"
+
+        self.rules_file = rules_file
+        self.rules = self._load_rules()
+
+    def _load_rules(self) -> list[ServiceRule]:
+        """Load rules from the external JSON file"""
+        try:
+            with open(self.rules_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            return [ServiceRule.from_dict(rule_data) for rule_data in data["rules"]]
+
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"AI service rules file not found: {self.rules_file}. "
+                "Please ensure the ai_service_rules.json file exists."
+            )
+        except json.JSONDecodeError as e:
+            raise ValueError(
+                f"Invalid JSON in rules file {self.rules_file}: {e}"
+            )
+        except KeyError as e:
+            raise ValueError(
+                f"Missing required key in rules file {self.rules_file}: {e}"
+            )
+
+    def reload_rules(self) -> None:
+        """Reload rules from the JSON file (useful for testing or dynamic updates)"""
+        self.rules = self._load_rules()
 
     def get_rules_for_context(self, context: str) -> list[ServiceRule]:
         """Get rules that apply to a specific context"""
@@ -252,9 +99,7 @@ class AIServiceRules:
             contexts.append("web")
             package_json = project_path / "package.json"
             try:
-                import json
-
-                with open(package_json) as f:
+                with open(package_json, encoding="utf-8") as f:
                     data = json.load(f)
                     deps = {
                         **(data.get("dependencies", {})),
@@ -269,7 +114,7 @@ class AIServiceRules:
                     if any(fw in deps for fw in ["express", "fastify", "koa", "hapi"]):
                         contexts.append("api")
 
-            except Exception:
+            except (json.JSONDecodeError, FileNotFoundError):
                 pass
 
         # Check for Python web frameworks
@@ -280,7 +125,7 @@ class AIServiceRules:
                 # Check requirements.txt
                 req_file = project_path / "requirements.txt"
                 if req_file.exists():
-                    content = req_file.read_text()
+                    content = req_file.read_text(encoding="utf-8")
                     if any(
                         fw in content
                         for fw in ["django", "flask", "fastapi", "tornado"]
@@ -290,14 +135,14 @@ class AIServiceRules:
                 # Check pyproject.toml
                 pyproject = project_path / "pyproject.toml"
                 if pyproject.exists():
-                    content = pyproject.read_text()
+                    content = pyproject.read_text(encoding="utf-8")
                     if any(
                         fw in content
                         for fw in ["django", "flask", "fastapi", "tornado"]
                     ):
                         contexts.extend(["web", "api"])
 
-            except Exception:
+            except FileNotFoundError:
                 pass
 
         # Check for database indicators
