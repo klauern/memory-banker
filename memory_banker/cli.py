@@ -105,16 +105,23 @@ class MemoryBankerCLI:
 def cli(ctx, project_path: Path, model: str, api_key: str | None, timeout: int):
     """Memory Banker - Agentically create Cline-style memory banks"""
     ctx.ensure_object(dict)
-    ctx.obj["cli"] = MemoryBankerCLI(
-        project_path=project_path, model=model, api_key=api_key, timeout=timeout
-    )
+    # Store parameters in context, don't instantiate CLI until needed
+    ctx.obj["project_path"] = project_path
+    ctx.obj["model"] = model
+    ctx.obj["api_key"] = api_key
+    ctx.obj["timeout"] = timeout
 
 
 @cli.command()
 @click.pass_context
 def init(ctx):
     """Initialize a new memory bank for the project"""
-    cli_instance = ctx.obj["cli"]
+    cli_instance = MemoryBankerCLI(
+        project_path=ctx.obj["project_path"],
+        model=ctx.obj["model"],
+        api_key=ctx.obj["api_key"],
+        timeout=ctx.obj["timeout"]
+    )
     asyncio.run(cli_instance.init())
 
 
@@ -122,7 +129,12 @@ def init(ctx):
 @click.pass_context
 def update(ctx):
     """Update existing memory bank files"""
-    cli_instance = ctx.obj["cli"]
+    cli_instance = MemoryBankerCLI(
+        project_path=ctx.obj["project_path"],
+        model=ctx.obj["model"],
+        api_key=ctx.obj["api_key"],
+        timeout=ctx.obj["timeout"]
+    )
     asyncio.run(cli_instance.update())
 
 
@@ -130,7 +142,12 @@ def update(ctx):
 @click.pass_context
 def refresh(ctx):
     """Completely refresh/rebuild the memory bank"""
-    cli_instance = ctx.obj["cli"]
+    cli_instance = MemoryBankerCLI(
+        project_path=ctx.obj["project_path"],
+        model=ctx.obj["model"],
+        api_key=ctx.obj["api_key"],
+        timeout=ctx.obj["timeout"]
+    )
     asyncio.run(cli_instance.refresh())
 
 
