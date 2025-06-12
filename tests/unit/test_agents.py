@@ -293,3 +293,94 @@ class TestMemoryBankAgents:
         """Test that agents have ai_rules initialized."""
         assert hasattr(agents, "ai_rules")
         assert agents.ai_rules is not None
+
+    @pytest.mark.asyncio
+    async def test_analyze_project_subset_agents(self, agents, python_project):
+        """Test analyze_project() with subset of agents."""
+        # Mock successful agent runs
+        mock_result = Mock()
+        mock_result.text = "Test content"
+
+        with patch("agents.Runner.run") as mock_run:
+            mock_run.return_value = mock_result
+
+            # Test running subset of agents
+            subset_agents = ["projectbrief", "techContext"]
+            results = await agents.analyze_project(python_project, subset_agents)
+
+            # Should only have results for specified agents
+            assert len(results) == 2
+            assert "projectbrief" in results
+            assert "techContext" in results
+            assert "activeContext" not in results
+            assert "systemPatterns" not in results
+
+            # Should have called Runner.run exactly twice (once per agent)
+            assert mock_run.call_count == 2
+
+            # Verify content
+            for agent_type in subset_agents:
+                assert results[agent_type] == "Test content"
+
+    @pytest.mark.asyncio
+    async def test_analyze_project_all_agents_when_none_specified(self, agents, python_project):
+        """Test analyze_project() runs all agents when none specified."""
+        mock_result = Mock()
+        mock_result.text = "Test content"
+
+        with patch("agents.Runner.run") as mock_run:
+            mock_run.return_value = mock_result
+
+            # Test running with no subset specified (should run all)
+            results = await agents.analyze_project(python_project, None)
+
+            # Should have results for all 7 agents
+            expected_agents = [
+                "projectbrief", "productContext", "activeContext",
+                "systemPatterns", "techContext", "progress", "aiGuidelines"
+            ]
+            assert len(results) == 7
+            for agent_type in expected_agents:
+                assert agent_type in results
+                assert results[agent_type] == "Test content"
+
+            # Should have called Runner.run 7 times (once per agent)
+            assert mock_run.call_count == 7
+
+    @pytest.mark.asyncio
+    async def test_analyze_project_empty_agents_list(self, agents, python_project):
+        """Test analyze_project() with empty agents list."""
+        mock_result = Mock()
+        mock_result.text = "Test content"
+
+        with patch("agents.Runner.run") as mock_run:
+            mock_run.return_value = mock_result
+
+            # Test running with empty list (should run none)
+            results = await agents.analyze_project(python_project, [])
+
+            # Should have no results
+            assert len(results) == 0
+            assert mock_run.call_count == 0
+
+    @pytest.mark.asyncio
+    async def test_analyze_project_invalid_agent_names(self, agents, python_project):
+        """Test analyze_project() with invalid agent names."""
+        mock_result = Mock()
+        mock_result.text = "Test content"
+
+        with patch("agents.Runner.run") as mock_run:
+            mock_run.return_value = mock_result
+
+            # Test with mix of valid and invalid agent names
+            mixed_agents = ["projectbrief", "invalid_agent", "techContext"]
+            results = await agents.analyze_project(python_project, mixed_agents)
+
+            # Should only run valid agents
+            assert len(results) == 2
+            assert "projectbrief" in results
+            assert "techContext" in results
+            assert "invalid_agent" not in results
+
+            # Should have called Runner.run twice (once per valid agent)
+            assert mock_run.call_count == 2

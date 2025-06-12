@@ -30,8 +30,12 @@ class MemoryBankerCLI:
         self.memory_bank = MemoryBank(self.project_path)
         self.agents = MemoryBankAgents(self.llm_model, timeout=self.timeout)
 
-    async def init(self):
-        """Initialize a new memory bank"""
+    async def init(self, agents_to_run: list[str] | None = None):
+        """Initialize a new memory bank
+
+        Args:
+            agents_to_run: Optional list of specific agents to run
+        """
         click.echo(f"🚀 Initializing memory bank for project at: {self.project_path}")
 
         # Create memory-bank directory
@@ -41,7 +45,7 @@ class MemoryBankerCLI:
         # Analyze the project
         click.echo("🔍 Analyzing project structure...")
         click.echo(f"⏱️  Using {self.timeout}s timeout per agent...")
-        analysis = await self.agents.analyze_project(self.project_path)
+        analysis = await self.agents.analyze_project(self.project_path, agents_to_run)
 
         # Generate memory bank files
         click.echo("📝 Generating memory bank files...")
@@ -50,8 +54,12 @@ class MemoryBankerCLI:
         click.echo("✅ Memory bank initialized successfully!")
         click.echo(f"📄 Files created in: {memory_bank_path}")
 
-    async def update(self):
-        """Update existing memory bank files"""
+    async def update(self, agents_to_run: list[str] | None = None):
+        """Update existing memory bank files
+
+        Args:
+            agents_to_run: Optional list of specific agents to run
+        """
         click.echo(f"🔄 Updating memory bank for project at: {self.project_path}")
 
         if not self.memory_bank.exists():
@@ -60,15 +68,19 @@ class MemoryBankerCLI:
 
         # Re-analyze project and update files
         click.echo("🔍 Re-analyzing project...")
-        analysis = await self.agents.analyze_project(self.project_path)
+        analysis = await self.agents.analyze_project(self.project_path, agents_to_run)
 
         click.echo("📝 Updating memory bank files...")
         await self.memory_bank.update_files(analysis)
 
         click.echo("✅ Memory bank updated successfully!")
 
-    async def refresh(self):
-        """Completely refresh the memory bank"""
+    async def refresh(self, agents_to_run: list[str] | None = None):
+        """Completely refresh the memory bank
+
+        Args:
+            agents_to_run: Optional list of specific agents to run
+        """
         click.echo(f"🔄 Refreshing memory bank for project at: {self.project_path}")
 
         if self.memory_bank.exists():
@@ -76,4 +88,4 @@ class MemoryBankerCLI:
             self.memory_bank.remove()
 
         # Reinitialize
-        await self.init()
+        await self.init(agents_to_run)

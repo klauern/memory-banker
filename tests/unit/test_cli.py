@@ -90,7 +90,7 @@ class TestMemoryBankerCLI:
 
             # Verify calls were made
             mock_create_dir.assert_called_once()
-            mock_analyze.assert_called_once_with(temp_project_dir)
+            mock_analyze.assert_called_once_with(temp_project_dir, None)
             mock_create_files.assert_called_once_with({"projectbrief": "# Test Brief"})
 
             # Verify output messages (check key messages, not exact format)
@@ -127,7 +127,7 @@ class TestMemoryBankerCLI:
 
             # Verify calls were made
             mock_exists.assert_called_once()
-            mock_analyze.assert_called_once_with(temp_project_dir)
+            mock_analyze.assert_called_once_with(temp_project_dir, None)
             mock_update_files.assert_called_once_with(
                 {"projectbrief": "# Updated Brief"}
             )

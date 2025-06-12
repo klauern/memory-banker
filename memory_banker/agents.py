@@ -16,14 +16,21 @@ class MemoryBankAgents:
         self.timeout = timeout
         self.ai_rules = AIServiceRules()
 
-    async def analyze_project(self, project_path: Path) -> dict[str, Any]:
-        """Analyze a project and generate memory bank content using specialized agents"""
+    async def analyze_project(self, project_path: Path, agents_to_run: list[str] | None = None) -> dict[str, Any]:
+        """Analyze a project and generate memory bank content using specialized agents
+
+        Args:
+            project_path: Path to the project to analyze
+            agents_to_run: Optional list of specific agents to run. If None, runs all agents.
+                          Valid values: 'projectbrief', 'productContext', 'activeContext',
+                          'systemPatterns', 'techContext', 'progress', 'aiGuidelines'
+        """
 
         # Get project context
         project_context = self._get_project_context(project_path)
 
         # Create specialized agents for each memory bank file
-        agents_tasks = [
+        all_agents_tasks = [
             (
                 "projectbrief",
                 self._create_project_brief_agent(),
@@ -61,7 +68,19 @@ class MemoryBankAgents:
             ),
         ]
 
-        # Run all agents with timeout
+        # Filter agents based on what's requested
+        if agents_to_run is not None:
+            agents_tasks = [
+                (file_type, agent, description)
+                for file_type, agent, description in all_agents_tasks
+                if file_type in agents_to_run
+            ]
+            print(f"🎯 Running subset of agents: {', '.join(agents_to_run)}")
+        else:
+            agents_tasks = all_agents_tasks
+            print("🤖 Running all agents")
+
+        # Run selected agents with timeout
         results = {}
         for file_type, agent, description in agents_tasks:
             print(f"🤖 {description}...")

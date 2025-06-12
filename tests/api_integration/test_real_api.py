@@ -29,7 +29,7 @@ class TestAPIIntegration:
 
     @pytest.mark.asyncio
     async def test_real_project_analysis(self, temp_project_dir, api_key):
-        """Test real project analysis with API calls."""
+        """Test real project analysis with API calls using subset of agents."""
         from memory_banker.cli import MemoryBankerCLI
 
         # Create a simple test project
@@ -44,22 +44,28 @@ class TestAPIIntegration:
             timeout=60  # Short timeout for testing
         )
 
-        # Run real analysis
-        analysis = await cli.agents.analyze_project(temp_project_dir)
+        # Run real analysis with subset of agents for faster testing
+        test_agents = ["projectbrief", "techContext"]
+        analysis = await cli.agents.analyze_project(temp_project_dir, test_agents)
 
         # Verify we got real results (not mocked)
         assert isinstance(analysis, dict)
-        assert len(analysis) > 0
+        assert len(analysis) == 2  # Should have exactly 2 agents' results
+
+        # Check that we got the expected agents
+        assert "projectbrief" in analysis
+        assert "techContext" in analysis
 
         # Check that we got actual content, not mock data
-        for _key, content in analysis.items():
+        for key, content in analysis.items():
             assert isinstance(content, str)
             assert len(content) > 10  # Should have real content
             assert "Generation Timed Out" not in content
+            print(f"✅ Agent '{key}' generated {len(content)} characters of content")
 
     @pytest.mark.asyncio
     async def test_memory_bank_creation_end_to_end(self, temp_project_dir, api_key):
-        """Test complete memory bank creation workflow."""
+        """Test complete memory bank creation workflow with subset of agents."""
         from memory_banker.cli import MemoryBankerCLI
 
         # Create a test project structure
@@ -76,19 +82,22 @@ dependencies = ["click"]
             project_path=temp_project_dir,
             model="gpt-4o-mini",
             api_key=api_key,
-            timeout=120
+            timeout=90  # Reduced timeout since we're running fewer agents
         )
 
-        # Run full init process
-        await cli.init()
+        # Run init process with subset of agents for faster testing
+        test_agents = ["projectbrief", "activeContext", "progress"]
+        await cli.init(test_agents)
 
         # Verify memory bank was created
         assert cli.memory_bank.exists()
 
-        # Check that at least some memory bank files were created with real content
+        # Check that the expected memory bank files were created with real content
         memory_bank_path = temp_project_dir / "memory-bank"
         created_files = []
-        for filename in cli.memory_bank.MEMORY_BANK_FILES:
+        expected_files = ["projectbrief.md", "activeContext.md", "progress.md"]
+
+        for filename in expected_files:
             file_path = memory_bank_path / filename
             if file_path.exists():
                 created_files.append(filename)
@@ -96,6 +105,8 @@ dependencies = ["click"]
                 assert len(content) > 50  # Should have substantial content
                 # Should not contain mock indicators
                 assert "Test Brief" not in content
+                print(f"✅ Created {filename} with {len(content)} characters")
 
-        # Should have created at least some files
-        assert len(created_files) > 0
+        # Should have created the expected files
+        assert len(created_files) == 3  # All 3 test agents should have generated files
+        assert set(created_files) == set(expected_files)
