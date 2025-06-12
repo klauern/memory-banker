@@ -120,7 +120,7 @@ def init(ctx):
         project_path=ctx.obj["project_path"],
         model=ctx.obj["model"],
         api_key=ctx.obj["api_key"],
-        timeout=ctx.obj["timeout"]
+        timeout=ctx.obj["timeout"],
     )
     asyncio.run(cli_instance.init())
 
@@ -133,7 +133,7 @@ def update(ctx):
         project_path=ctx.obj["project_path"],
         model=ctx.obj["model"],
         api_key=ctx.obj["api_key"],
-        timeout=ctx.obj["timeout"]
+        timeout=ctx.obj["timeout"],
     )
     asyncio.run(cli_instance.update())
 
@@ -146,7 +146,7 @@ def refresh(ctx):
         project_path=ctx.obj["project_path"],
         model=ctx.obj["model"],
         api_key=ctx.obj["api_key"],
-        timeout=ctx.obj["timeout"]
+        timeout=ctx.obj["timeout"],
     )
     asyncio.run(cli_instance.refresh())
 
