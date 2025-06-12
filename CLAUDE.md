@@ -9,6 +9,7 @@ Memory Banker is a Python CLI tool that uses AI agents to intelligently analyze 
 ## Common Commands
 
 ### Development Environment
+
 ```bash
 # Install dependencies for development
 task install
@@ -21,6 +22,7 @@ task install-prod
 ```
 
 ### Code Quality
+
 ```bash
 # Auto-fix all linting and formatting issues
 task fix
@@ -36,6 +38,7 @@ task format-check  # Check formatting without changes
 ```
 
 ### Testing
+
 ```bash
 # Run all tests
 task test
@@ -51,6 +54,7 @@ uv run pytest tests/unit/test_cli.py::TestMemoryBankerCLI::test_init_success -v
 ```
 
 ### Application Usage
+
 ```bash
 # Run the CLI tool
 task run
@@ -65,6 +69,7 @@ memory-banker init --project-path /path/to/project
 ```
 
 ### Development Workflow
+
 ```bash
 # Pre-commit checks (format + lint + test)
 task pre-commit
@@ -89,6 +94,7 @@ task clean
 ### Agent Specialization
 
 The system uses 6 specialized agents that build contextually upon each other:
+
 - `ProjectBriefAgent`: Foundation document with scope and requirements
 - `ProductContextAgent`: Problem space analysis  
 - `ActiveContextAgent`: Current development state and next steps
@@ -101,6 +107,7 @@ Each agent receives the full project context plus outputs from previous agents, 
 ### Memory Bank Structure
 
 Generated memory banks follow Cline's methodology with 6 interconnected files in `memory-bank/`:
+
 ```
 memory-bank/
 ├── projectbrief.md      # Foundation and scope
@@ -121,6 +128,7 @@ memory-bank/
 ## Development Notes
 
 ### Project Structure
+
 ```
 memory_banker/           # Core package
 ├── __init__.py
@@ -161,6 +169,7 @@ tests/                  # Comprehensive test suite
 ### Entry Point Configuration
 
 The CLI entry point is configured in `pyproject.toml` as:
+
 ```toml
 [project.scripts]
 memory-banker = "memory_banker.cli:main"

@@ -34,11 +34,13 @@ Memory banks are structured documentation files that help AI assistants understa
 ### Using uv (Recommended)
 
 #### Option 1: Install as a tool (global)
+
 ```bash
 uv tool install git+https://github.com/yourusername/memory-banker.git
 ```
 
 #### Option 2: Development installation
+
 ```bash
 git clone https://github.com/yourusername/memory-banker.git
 cd memory-banker
@@ -58,11 +60,13 @@ pip install -e .
 ## Quick Start
 
 1. **Set your OpenAI API key:**
+
    ```bash
    export OPENAI_API_KEY=your_api_key_here
    ```
 
 2. **Initialize a memory bank for your project:**
+
    ```bash
    # Using uv (recommended)
    uv run memory-banker init
@@ -72,6 +76,7 @@ pip install -e .
    ```
 
 3. **Check the generated files:**
+
    ```bash
    ls memory-bank/
    # projectbrief.md  productContext.md  activeContext.md  
@@ -125,6 +130,7 @@ memory-banker --project-path ~/my-big-project --timeout 600 --model gpt-4 init
 ### Supported Models
 
 Any model supported by the OpenAI Agents framework:
+
 - `gpt-4.1-mini` (default) - Fast and cost-effective
 - `gpt-4o` - More comprehensive analysis
 - `gpt-4` - High-quality detailed analysis
@@ -178,6 +184,7 @@ memory-banker refresh
 After running `memory-banker init`, you'll get a `memory-bank/` directory with comprehensive documentation like:
 
 **projectbrief.md**:
+
 ```markdown
 # Project Brief: My Awesome Project
 
@@ -192,6 +199,7 @@ A comprehensive web application that solves X problem by providing Y solution...
 ```
 
 **activeContext.md**:
+
 ```markdown
 # Active Context
 
@@ -210,24 +218,28 @@ Currently implementing the user authentication system using JWT tokens...
 ### Common Issues
 
 **Import Errors**:
+
 ```bash
 # Make sure you're in the right environment
 uv run memory-banker --help
 ```
 
 **API Errors**:
+
 ```bash
 # Check your API key
 echo $OPENAI_API_KEY
 ```
 
 **Timeout Issues**:
+
 ```bash
 # Increase timeout for complex projects
 memory-banker --timeout 900 init
 ```
 
 **Permission Errors**:
+
 ```bash
 # Make sure the directory is writable
 ls -la

@@ -1,251 +1,355 @@
-# Technical Implementation Context for memory-banker
+# Technical Implementation Context for Memory Banker
 
-This document captures the comprehensive technical context for the **memory-banker** project based on its current structure, configuration, and dependencies. It is designed to complement the project brief with detailed implementation specifics, setup instructions, and operational considerations.
+This document captures the detailed technical implementation context for the **Memory Banker** project, building upon the project brief and README foundation. It provides a comprehensive overview of technologies, setup, development workflows, constraints, dependencies, operations, and troubleshooting guidelines essential for contributors and maintainers.
 
 ---
 
 ## Technologies Used
 
-- **Programming Languages:**
-  - Python, version >= 3.13 (as specified in `pyproject.toml`)
+### Programming Languages and Versions
 
-- **Frameworks and Libraries:**
-  - `click` (version >= 8.2.1) — For building the command-line interface (CLI)
-  - `openai-agents[litellm]` (version >= 0.0.17) — For agentic AI memory bank creation and interaction
+- **Python 3.13+** (minimum required version as per `pyproject.toml`)
+- CLI scripting with Python
 
-- **Development Tools:**
-  - Poetry or Pip (for package management; `pyproject.toml` is configured for dependency and build management)
-  - Git (version control)
-  - Potential use of Litellm backend via OpenAI-agents dependency
+### Frameworks and Libraries
 
-- **Runtime Environments and Platforms:**
-  - Works on platforms supporting Python 3.13+
-  - Command line environment with POSIX shells or Windows PowerShell supported via `click`
+- **click >= 8.2.1** — For building the CLI interface and command parsing
+- **openai-agents[litellm] >= 0.0.17** — Core AI agent framework used to analyze projects leveraging OpenAI's language models (with optional LiteLLM support)
+- **pytest >= 8.4.0** (dev dependency) — Unit and integration testing framework
+- **pytest-asyncio** — For async test support
+- **pytest-cov** — Test coverage reporting
+- **pytest-mock** — Mocking for tests
+- **ruff >= 0.8.0** — Code linting, formatting, and static analysis
+
+### Development Tools and Their Roles
+
+- **Hatchling** — Build backend tool for Python packaging (`pyproject.toml` specifies `hatchling.build`)
+- **uv CLI tool** — Optional command line environment and runner recommended for installation and execution
+- **Git** — Version control
+- **Ruff** — Linting and style enforcement tool
+- **pytest** — Automated testing
+- **Docker** (optional) — Could be used in advanced deployment scenarios though not explicitly detailed
+
+### Runtime Environments and Platforms
+
+- Cross-platform (Linux, macOS, Windows) as Python 3.13+ is supported widely
+- Requires internet access for OpenAI API interactions
+- Assumes shell environment (bash/zsh) for environment variables and CLI commands
 
 ---
 
 ## Development Setup and Environment
 
-### Step-by-step Environment Setup
+### Step-by-Step Environment Setup
 
-1. **Ensure Python 3.13+ is installed**
+1. **Install Python 3.13+**
+
+   Verify installation:
 
    ```bash
-   python3 --version  # Must output 3.13 or newer
+   python3 --version
+   # Python 3.13.x
    ```
 
-2. **Clone the repository (if not already)**
+2. **Clone the repository**
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/yourusername/memory-banker.git
    cd memory-banker
    ```
 
-3. **Create and activate a virtual environment**
+3. **Install dependencies**
+
+   Using `uv` (recommended):
 
    ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   uv tool install git+https://github.com/yourusername/memory-banker.git
+   uv sync
    ```
 
-4. **Install dependencies**
+   Or using `pip`:
 
-   Using the lock file (`uv.lock`) and `pyproject.toml`, install dependencies via Poetry or pip:
+   ```bash
+   pip install -e .
+   ```
 
-   - Using Poetry (recommended if Poetry is installed):
+4. **Set OpenAI API key**
 
-     ```bash
-     poetry install
-     ```
+   Export environment variable in your shell profile (`~/.bashrc`, `~/.zshrc`):
 
-   - Using pip (if Poetry is not installed):
+   ```bash
+   export OPENAI_API_KEY="your_api_key_here"
+   ```
 
-     ```bash
-     pip install -r requirements.txt  # Generate requirements.txt with `poetry export` if needed.
-     pip install .
-     ```
+5. **Verify CLI availability**
 
-5. **Set environment variables (if necessary)**
+   ```bash
+   memory-banker --help
+   ```
 
-   - For any OpenAI API keys or environment-specific credentials, export variables such as:
+### Required Tools and Installation
 
-     ```bash
-     export OPENAI_API_KEY="your-api-key"
-     ```
+- Python 3.13+ (<https://www.python.org/downloads/>)
+- `uv` CLI tool (<https://uv.sh>) — recommended but optional
+- Git (<https://git-scm.com>)
+- Code Editor/IDE (see below)
 
-### Configuration Requirements
+### Configuration Requirements and Environment Variables
 
-- Python environment set to 3.13 or newer (documented in `.python-version` and `pyproject.toml`)
-- API keys/configuration for connecting to OpenAI or any AI services might be needed; this is implied by presence of `openai-agents` dependency
-- `mise.toml` is present but its purpose is unclear; likely related to project-specific tooling or configuration (needs review)
+- `OPENAI_API_KEY` (string, required) — OpenAI API key for agent interaction
+- Optional CLI flags for:
+  - `--model` (e.g., `gpt-4.1-mini`, `gpt-4o`, `gpt-4`)
+  - `--project-path` to specify target project directory
+  - `--timeout` for agent timeout seconds
+  - `--api-key` to override environment variable temporarily
 
 ### IDE/Editor Setup and Recommended Extensions
 
-- Recommended IDEs: VSCode, PyCharm, or other Python-supporting editors
-- Suggested extensions for VSCode:
-  - Python extension by Microsoft — Linting, IntelliSense, debugging
-  - Pylance — Enhanced language support
-  - GitLens — Git integration
-  - EditorConfig — Enforce consistent coding styles if applicable
+- **Visual Studio Code (VSCode)**
+  - Python extension by Microsoft (for code intelligence, linting)
+  - Pylance (type checking)
+  - Ruff extension or integration for linting
+  - GitLens (for git insights)
+- **PyCharm**
+  - Built-in Python support
+  - pytest configuration
+- Editor configured to respect `.ruff.toml` or `pyproject.toml` linting rules
+- Enable auto-format on save with `black` or `ruff` (if configured)
 
 ---
 
 ## Technical Constraints and Requirements
 
-- **System Requirements:**
-  - Python 3.13 or greater runtime
-  - Compatible OS: Unix-like systems (Linux, macOS) and Windows
-  - Network access for API calls to OpenAI agents and dependencies
+### System Requirements and Compatibility
 
-- **Performance Requirements:**
-  - Real-time or interactive CLI usage expected; performance depends on AI API latency
-  - Local operations (memory management) to be efficient with careful resource use
+- Requires Python 3.13 or newer; older versions unsupported due to language and dependency requirements
+- Must have HTTP connectivity to OpenAI API endpoints
+- Compatible with POSIX-compliant shells and Windows PowerShell (with minor adjustments)
+- Git should be installed and available in PATH for history-based analysis and project scanning
 
-- **Security Requirements:**
-  - API keys and secrets must be securely stored and not hardcoded
-  - Authentication for external APIs (OpenAI) must be maintained confidential
-  - No sensitive data to be logged inadvertently
+### Performance Requirements and Limitations
 
-- **Compliance/Regulatory:**
-  - Usage of OpenAI API may require compliance with their usage policies
-  - No explicit compliance requirements indicated; environment-dependent
+- Per-agent timeout default: **300 seconds (5 min)**; configurable to max recommended **600 seconds (10 min)**
+- Designed for projects of variable size with scalable analysis timeouts
+- Efficiency depends on OpenAI model latency and project complexity
+- CLI operations expected to run on local compute without heavy external dependencies
+
+### Security Requirements and Considerations
+
+- API keys must be kept secret, preferably set via environment variables, **never commit them**
+- CLI avoids logging sensitive API keys or output in plain text
+- Interactions over HTTPS with OpenAI API ensure encrypted communication
+- Users responsible for securing local environment and API key access
+
+### Compliance and Regulatory Requirements
+
+- Usage of OpenAI API is subject to OpenAI’s terms of service and data privacy policies
+- No PII or sensitive user data is collected or stored by the tool itself
+- Generated memory banks are local markdown files, managed by the user
+- Users must ensure compliance if integrating with proprietary or sensitive codebases
 
 ---
 
 ## Dependencies and External Integrations
 
-- **Core Dependencies:**
-  - `click`: CLI parsing and command management
-  - `openai-agents[litellm]`: Core AI agent framework for memory bank functionality
+### Core Dependencies
 
-- **Optional Dependencies:**
-  - None explicitly listed; extras within `openai-agents[litellm]` managed
+| Dependency               | Purpose                                          |
+|--------------------------|-------------------------------------------------|
+| `click` >= 8.2.1         | CLI command parsing and option handling         |
+| `openai-agents[litellm]` >= 0.0.17 | Core AI agent framework to enable project analysis with OpenAI |
+| `pytest` (dev)           | Running unit and integration tests              |
+| `pytest-asyncio` (dev)   | Async test support                               |
+| `pytest-cov` (dev)       | Coverage reporting                               |
+| `pytest-mock` (dev)      | Mocking in tests                                 |
+| `ruff` (dev)             | Code style linting and formatting                |
 
-- **External Services and APIs:**
-  - OpenAI API backend utilized through `openai-agents` package for agent functionalities
+### Optional Dependencies and Feature Flags
 
-- **Third-Party Integrations:**
-  - Litellm backend (Lightweight LLM backend) via `openai-agents`
+- The `litellm` extras for `openai-agents` include lightweight LLM support (optional, depending on user preference)
+- CLI options allow users to specify different OpenAI models or timeouts
+
+### External Services and APIs
+
+- **OpenAI API**: Used extensively via `openai-agents` to run AI models (GPT-4 variants and others) for intelligent project analysis
+
+### Third-Party Integrations and Configuration
+
+- OpenAI API key management as described above
+- Model configuration via CLI flags or defaults in code, integrated with `openai-agents` framework
 
 ---
 
 ## Tool Usage Patterns and Conventions
 
-- **Build System:**
-  - Python’s `pyproject.toml` based project management
-  - Usage of `pip` or Poetry for dependency resolution and packaging
+### Build Systems and Automation Tools
 
-- **Testing Frameworks:**
-  - Not explicitly defined; recommend adding pytest or unittest for test automation
+- Uses **Hatchling** for building and packaging Python project (`pyproject.toml`)
+- `uv` tool recommended to manage dependencies and run CLI commands in isolated environments
+- Git for version control and source history analysis
 
-- **Deployment Tools:**
-  - No deployment tooling specified; assumed CLI utility deployed via pip install or local use
+### Testing Frameworks and Strategies
 
-- **Monitoring and Debugging:**
-  - Debug logs to console or custom logging inside the app (requires confirmation)
-  - Use Python standard logging and debugging tools
+- Testing organized under `tests/` directory:
+  - Unit tests under `tests/unit/`
+  - Integration tests under `tests/integration/`
+  - Fixtures in `tests/fixtures/`
+- Test files follow `test_*.py` naming conventions
+- Use `pytest` as test runner:
+
+  ```bash
+  pytest
+  pytest --cov=memory_banker
+  ```
+
+- Async tests supported with `pytest-asyncio`
+- Mocking using `pytest-mock`
+
+### Deployment Tools and Processes
+
+- As a Python CLI package, deploy via PyPI or git installation
+- Use `pip install -e .` for development installs
+- Use `uv tool install git+https://...` for recommended installation path
+- No containerization specified but could be added if needed
+
+### Monitoring and Debugging Tools
+
+- Logs CLI output to console
+- Common debugging via test assertions, breakpoints in IDE
+- Potential for adding logging module outputs if extended
 
 ---
 
 ## Development Workflow and Standards
 
-- **Code Organization and File Structure:**
-  ```
-  memory-banker/
-  ├── memory_banker/          # Main package source code
-  │   ├── __init__.py
-  │   ├── agents.py           # AI agent logic
-  │   ├── cli.py              # CLI commands and entry points
-  │   └── memory_bank.py      # Memory bank core logic
-  ├── main.py                 # CLI entry point with `cli()` function
-  ├── pyproject.toml          # Build and dependency management
-  ├── .gitignore
-  ├── README.md
-  └── uv.lock                 # Dependency lock file
-  ```
+### Code Organization and File Structure Conventions
 
-- **Coding Standards and Style Guidelines:**
-  - Standard Python PEP8 style conventions
-  - Docstrings and type hints recommended (check codebase to verify)
-  - Consistent naming and modularity across agents, memory bank, and CLI
+- Core application code inside `memory_banker/` package folder
+- CLI entrypoint and commands implemented in `memory_banker/cli.py`
+- AI agents defined in `memory_banker/agents.py` (one agent per contextual memory bank type)
+- Memory bank file handling in `memory_banker/memory_bank.py`
+- Tests clearly segregated into unit and integration categories under `tests/`
+- Project root contains config files such as `pyproject.toml`, `pytest.ini`, `.gitignore`
 
-- **Version Control Patterns:**
-  - Git with `main` as primary branch
-  - Conventional commits recommended for clear history
-  - Feature branches and pull requests for new functionality
+### Coding Standards and Style Guidelines
 
-- **Code Review & QA:**
-  - Peer reviews on PRs mandatory
-  - Automated tests recommended to integrate with CI pipelines
+- Follows Python code style with line length max 88 (per Ruff config)
+- Uses double quotes for strings (per Ruff formatting rules)
+- Avoids violations flagged by Ruff like pyflakes, pycodestyle, bugbear, flake8-comprehensions
+- Complexity warnings ignored if necessary (`C901`)
+- Consistent indentation with spaces
+- Encourages type hints and static checks where possible
+
+### Version Control Patterns and Branching Strategies
+
+- Git used as VCS
+- Main development happens on `main` branch (current branch)
+- Feature or bugfix branches created for Pull Requests/merges
+- Commit messages follow imperative style with scope prefix (e.g., `feat:`, `fix:`, `refactor:`)
+- Code auto-formatting applied before commits (via Ruff or pre-commit hooks may be added)
+
+### Code Review and Quality Assurance Processes
+
+- Pull requests reviewed by maintainers for code quality, tests, and docs
+- Automated tests run before merging
+- Linting and formatting ensured
+- Emphasis on documentation update (README, CLAUDE.md)
 
 ---
 
 ## Operational Context
 
-- **Deployment Environments:**
-  - Primarily CLI-based usage in developer or operations environment
-  - Deploy by installing package via pip or Poetry locally or in a shared environment
+### Deployment Environments and Configurations
 
-- **Infrastructure and Scaling:**
-  - Scaling depends mainly on API service limits and local computation
-  - Lightweight CLI tool with minimal resource usage
+- Local CLI tool for developer machines
+- No server or cloud environment required
+- User specifies project directory to analyze via CLI options or defaults to current directory
 
-- **Backup and Disaster Recovery:**
-  - Local state or cached memory banks should be regularly backed up if implemented
-  - No explicit backup policy defined; recommend safe storage of agent-generated memory
+### Infrastructure Requirements and Scaling Considerations
 
-- **Maintenance & Upgrade:**
-  - Increment versioning per semantic versioning in `pyproject.toml`
-  - Regular dependency upgrades, especially for `openai-agents` for latest AI model features
+- Minimal requirements: Python runtime and network connectivity
+- Scalability dependent on API limits and project size
+- Larger projects may require increasing agent timeouts (up to recommended 600s)
+
+### Backup and Disaster Recovery Procedures
+
+- Generated files stored in `memory-bank/` folder - user should back up along with project
+- Version control natural backup via Git for source code, but `memory-bank` directory may be excluded by user choice
+- No automated backup mechanism implemented
+
+### Maintenance and Upgrade Procedures
+
+- Update dependencies regularly via `pip` or `uv` tool
+- Follow semantic versioning `0.1.x` moving to `1.x`
+- Update `openai-agents` as new versions release
+- Add new features via modular agent additions
+- Keep API key updated as per OpenAI requirements
 
 ---
 
 ## Troubleshooting and Debugging
 
-- **Common Issues & Solutions:**
-  - **Dependency errors:** Ensure environment Python version matches >=3.13; reinstall dependencies.
-  - **API authentication failure:** Verify `OPENAI_API_KEY` validity and export in shell session.
-  - **CLI command errors:** Run `memory-banker --help` to verify usage; check for typos.
-  - **Lock file conflicts:** Delete `uv.lock` and re-resolve with Poetry or pip if needed.
+### Common Issues and Solutions
 
-- **Debugging Tools and Techniques:**
-  - Use `pdb` or IDE debuggers to step through `cli.py`, `agents.py`, and `memory_bank.py`.
-  - Enable verbose logging in code to trace API calls and state changes.
+| Issue                                  | Potential Cause                               | Solution                                      |
+|---------------------------------------|----------------------------------------------|-----------------------------------------------|
+| `memory-banker` command not found     | Not installed or PATH missing                 | Install via `uv tool install` or `pip install -e .` and ensure PATH set |
+| OpenAI API key missing or invalid     | `OPENAI_API_KEY` not set or incorrect          | Export valid API key, check `.bashrc` or `.zshrc` |
+| Agent timeout errors                  | Default timeout too short for large projects | Increase timeout via CLI flag `--timeout 600` |
+| Python version incompatible            | Running on Python < 3.13                       | Upgrade Python to 3.13+                        |
+| Linting errors on code                 | Ruff violation detected                         | Fix per error details or adjust `.ruff.toml`  |
+| Tests failing                         | Code or environment issues                       | Run `pytest -v`, check test logs, fix accordingly |
 
-- **Performance Profiling:**
-  - Profile Python code with `cProfile` or `pyinstrument` for heavy computations if found.
-  - Measure API call latencies to optimize user experience.
+### Debugging Tools and Techniques
 
-- **Error Handling and Logging:**
-  - Use Python `logging` module for structured logs
-  - Catch exceptions gracefully in CLI commands and provide user-friendly error messages
-  - Possible integration with monitoring tools if scaled to server deployments
+- Use IDE debugger (e.g., VSCode Debugger, PyCharm) with breakpoints
+- Enable verbose logging calls if implemented
+- Run isolated unit tests to isolate problem areas
+- Use `pytest` with `-s` and `--tb=short` for focused output
 
----
+### Performance Profiling and Optimization
 
-# Appendix: Example Commands
+- Profile long-running agent calls by increasing timeout only as needed
+- Inspect calls to OpenAI API for possible batching or caching improvements (future enhancements)
+- Optimize local code with profiling tools (`cProfile` in Python)
+- Reduce CLI startup time by lazy-loading heavy components if needed
 
-```bash
-# Activate the virtual environment
-source .venv/bin/activate
+### Error Handling and Logging Patterns
 
-# Run CLI help
-memory-banker --help
-
-# Run a command, e.g., create or manage memory bank
-memory-banker create --project "example-project"
-
-# Check Python version
-python3 --version
-
-# Export environment variable for API key
-export OPENAI_API_KEY="your-openai-api-key"
-```
+- CLI commands raise clear error messages on invalid input or API failures
+- Exceptions caught and user informed with next-step suggestions
+- Logging currently to console; future enhancements may add configurable log levels and files
 
 ---
 
 # Summary
 
-The **memory-banker** project is a Python 3.13+ CLI utility built with `click` and the `openai-agents` AI framework to create and manage Cline-style memory banks agentically. Development uses modern Python packaging (`pyproject.toml`), and operations require careful management of API credentials and environment setup. The codebase follows standard Python development practices with modular components and lightweight dependencies, geared towards extensible AI-driven memory management in projects.
+The **Memory Banker** project is a modern Python CLI tool leveraging AI agent frameworks centered around OpenAI's API to generate comprehensive Cline-style memory banks that capture a project's technical, architectural, and contextual details in markdown. It emphasizes extensibility, modularity, and developer usability with clear setup instructions, tested code, and configuration management.
 
-This technical context document will be updated as the project evolves and more detailed implementation and operational procedures are developed.
+This document should serve as a practical guide for developers to setup, contribute, troubleshoot, and operate the project efficiently.
+
+---
+
+# Appendices
+
+### Sample CLI Initialization Command
+
+```bash
+export OPENAI_API_KEY="sk-xxxxxx"
+memory-banker --project-path ~/my-python-project --model gpt-4 --timeout 600 init
+```
+
+### List of Generated Memory Bank Files
+
+- `projectbrief.md`
+- `productContext.md`
+- `activeContext.md`
+- `systemPatterns.md`
+- `techContext.md`
+- `progress.md`
+
+Each corresponds to an AI agent’s analysis domain.
+
+---
+
+If any clarifications or expansions are needed on specific sections, please reach out.
