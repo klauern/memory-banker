@@ -24,12 +24,36 @@ class MemoryBankAgents:
 
         # Create specialized agents for each memory bank file
         agents_tasks = [
-            ("projectbrief", self._create_project_brief_agent(), "Generate a comprehensive project brief"),
-            ("productContext", self._create_product_context_agent(), "Analyze the product context and problem space"),
-            ("activeContext", self._create_active_context_agent(), "Determine current development context"),
-            ("systemPatterns", self._create_system_patterns_agent(), "Analyze system architecture and patterns"),
-            ("techContext", self._create_tech_context_agent(), "Document technical context and setup"),
-            ("progress", self._create_progress_agent(), "Assess project progress and status")
+            (
+                "projectbrief",
+                self._create_project_brief_agent(),
+                "Generate a comprehensive project brief",
+            ),
+            (
+                "productContext",
+                self._create_product_context_agent(),
+                "Analyze the product context and problem space",
+            ),
+            (
+                "activeContext",
+                self._create_active_context_agent(),
+                "Determine current development context",
+            ),
+            (
+                "systemPatterns",
+                self._create_system_patterns_agent(),
+                "Analyze system architecture and patterns",
+            ),
+            (
+                "techContext",
+                self._create_tech_context_agent(),
+                "Document technical context and setup",
+            ),
+            (
+                "progress",
+                self._create_progress_agent(),
+                "Assess project progress and status",
+            ),
             (
                 "aiGuidelines",
                 self._create_ai_guidelines_agent(),

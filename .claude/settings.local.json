@@ -15,7 +15,8 @@
       "Bash(uv tool install:*)",
       "Bash(memory-banker:*)",
       "Bash(task check)",
-      "Bash(task fix)"
+      "Bash(task fix)",
+      "Bash(rg:*)"
     ],
     "deny": []
   }

@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from memory_banker.agents import MemoryBankAgents
+from memory_banker.ai_service_rules import AIServiceRules
 
 
 class TestMemoryBankAgents:
