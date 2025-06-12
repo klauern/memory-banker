@@ -15,6 +15,11 @@ class TestMemoryBankerCLI:
         """Mock API key environment variable."""
         monkeypatch.setenv("OPENAI_API_KEY", "test-api-key")
 
+    @pytest.fixture
+    def mock_api_base(self, monkeypatch):
+        """Mock API base URL environment variable."""
+        monkeypatch.setenv("OPENAI_API_BASE", "https://api.example.com/v1")
+
     def test_init_success(self, temp_project_dir, mock_api_key):
         """Test MemoryBankerCLI initialization with valid parameters."""
         cli = MemoryBankerCLI(
@@ -62,6 +67,58 @@ class TestMemoryBankerCLI:
         )
 
         assert cli.timeout == 300  # Default timeout
+
+    def test_init_api_base_from_env(
+        self, temp_project_dir, mock_api_key, mock_api_base
+    ):
+        """Test MemoryBankerCLI gets API base URL from environment."""
+        cli = MemoryBankerCLI(project_path=temp_project_dir, model="gpt-4o-mini")
+
+        assert cli.api_base == "https://api.example.com/v1"
+
+    def test_init_api_base_explicit(self, temp_project_dir, mock_api_key):
+        """Test MemoryBankerCLI accepts explicit API base URL."""
+        cli = MemoryBankerCLI(
+            project_path=temp_project_dir,
+            model="gpt-4o-mini",
+            api_key="test-key",
+            api_base="https://custom.api.com/v1",
+        )
+
+        assert cli.api_base == "https://custom.api.com/v1"
+
+    def test_init_api_base_explicit_overrides_env(
+        self, temp_project_dir, mock_api_key, mock_api_base
+    ):
+        """Test explicit API base URL overrides environment variable."""
+        cli = MemoryBankerCLI(
+            project_path=temp_project_dir,
+            model="gpt-4o-mini",
+            api_key="test-key",
+            api_base="https://override.api.com/v1",
+        )
+
+        assert cli.api_base == "https://override.api.com/v1"
+
+    def test_init_no_api_base_is_none(self, temp_project_dir, mock_api_key):
+        """Test MemoryBankerCLI handles None API base URL."""
+        import os
+
+        # Clear any existing API base from environment
+        old_base = os.environ.get("OPENAI_API_BASE")
+        if old_base:
+            del os.environ["OPENAI_API_BASE"]
+
+        try:
+            cli = MemoryBankerCLI(
+                project_path=temp_project_dir, model="gpt-4o-mini", api_key="test-key"
+            )
+
+            assert cli.api_base is None
+        finally:
+            # Restore the API base if it existed
+            if old_base:
+                os.environ["OPENAI_API_BASE"] = old_base
 
     @pytest.mark.asyncio
     @patch("agents.extensions.models.litellm_model.LitellmModel")
