@@ -28,6 +28,7 @@ class TestCLIInterface:
         assert "--project-path" in result.output
         assert "--model" in result.output
         assert "--api-key" in result.output
+        assert "--api-base" in result.output
         assert "--timeout" in result.output
         assert "init" in result.output
         assert "update" in result.output
@@ -72,8 +73,13 @@ class TestCLIInterface:
         assert "Invalid value" in result.output
 
     @patch("memory_banker.cli.MemoryBankerCLI")
-    def test_parameter_passing(self, mock_cli_class, runner, temp_project_dir):
+    def test_parameter_passing(
+        self, mock_cli_class, runner, temp_project_dir, monkeypatch
+    ):
         """Test that CLI parameters are passed correctly to MemoryBankerCLI."""
+        # Clear environment variables to test explicit parameters
+        monkeypatch.delenv("OPENAI_API_BASE", raising=False)
+
         # Mock to prevent actual instantiation
         mock_cli_instance = Mock()
         mock_cli_instance.init = AsyncMock()
@@ -99,6 +105,7 @@ class TestCLIInterface:
             project_path=temp_project_dir,
             model="gpt-4",
             api_key="test-key",
+            api_base=None,
             timeout=600,
         )
 
@@ -108,6 +115,7 @@ class TestCLIInterface:
     ):
         """Test that API key is read from environment."""
         monkeypatch.setenv("OPENAI_API_KEY", "env-api-key")
+        monkeypatch.delenv("OPENAI_API_BASE", raising=False)
 
         mock_cli_instance = Mock()
         mock_cli_instance.init = AsyncMock()
@@ -118,6 +126,25 @@ class TestCLIInterface:
         # Should use environment API key
         args, kwargs = mock_cli_class.call_args
         assert kwargs["api_key"] == "env-api-key"
+        assert kwargs["api_base"] is None
+
+    @patch("memory_banker.cli.MemoryBankerCLI")
+    def test_environment_api_base(
+        self, mock_cli_class, runner, temp_project_dir, monkeypatch
+    ):
+        """Test that API base URL is read from environment."""
+        monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+        monkeypatch.setenv("OPENAI_API_BASE", "https://custom.api.com/v1")
+
+        mock_cli_instance = Mock()
+        mock_cli_instance.init = AsyncMock()
+        mock_cli_class.return_value = mock_cli_instance
+
+        runner.invoke(cli, ["--project-path", str(temp_project_dir), "init"])
+
+        # Should use environment API base
+        args, kwargs = mock_cli_class.call_args
+        assert kwargs["api_base"] == "https://custom.api.com/v1"
 
     @patch("memory_banker.cli.MemoryBankerCLI")
     def test_default_values(
@@ -125,6 +152,7 @@ class TestCLIInterface:
     ):
         """Test CLI default values."""
         monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+        monkeypatch.delenv("OPENAI_API_BASE", raising=False)
 
         mock_cli_instance = Mock()
         mock_cli_instance.init = AsyncMock()
@@ -136,3 +164,4 @@ class TestCLIInterface:
         assert kwargs["model"] == "gpt-4.1-mini"  # Default model
         assert kwargs["timeout"] == 300  # Default timeout
         assert kwargs["api_key"] == "test-key"
+        assert kwargs["api_base"] is None  # Default api_base

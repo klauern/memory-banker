@@ -15,11 +15,13 @@ class MemoryBankerCLI:
         project_path: Path,
         model: str,
         api_key: str | None = None,
+        api_base: str | None = None,
         timeout: int = 300,
     ):
         self.project_path = project_path
         self.model = model
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.api_base = api_base or os.getenv("OPENAI_API_BASE")
         self.timeout = timeout
 
         if not self.api_key:
@@ -27,7 +29,9 @@ class MemoryBankerCLI:
                 "API key must be provided via --api-key or OPENAI_API_KEY environment variable"
             )
 
-        self.llm_model = LitellmModel(model=self.model, api_key=self.api_key)
+        self.llm_model = LitellmModel(
+            model=self.model, api_key=self.api_key, base_url=self.api_base
+        )
         self.memory_bank = MemoryBank(self.project_path)
         self.agents = MemoryBankAgents(self.llm_model, timeout=self.timeout)
 
@@ -96,19 +100,32 @@ class MemoryBankerCLI:
     help="API key for the model (will use OPENAI_API_KEY env var if not provided)",
 )
 @click.option(
+    "--api-base",
+    envvar="OPENAI_API_BASE",
+    help="Base URL for the API (will use OPENAI_API_BASE env var if not provided)",
+)
+@click.option(
     "--timeout",
     type=int,
     default=300,
     help="Timeout in seconds for agent processing (default: 300)",
 )
 @click.pass_context
-def cli(ctx, project_path: Path, model: str, api_key: str | None, timeout: int):
+def cli(
+    ctx,
+    project_path: Path,
+    model: str,
+    api_key: str | None,
+    api_base: str | None,
+    timeout: int,
+):
     """Memory Banker - Agentically create Cline-style memory banks"""
     ctx.ensure_object(dict)
     # Store parameters in context, don't instantiate CLI until needed
     ctx.obj["project_path"] = project_path
     ctx.obj["model"] = model
     ctx.obj["api_key"] = api_key
+    ctx.obj["api_base"] = api_base
     ctx.obj["timeout"] = timeout
 
 
@@ -120,6 +137,7 @@ def init(ctx):
         project_path=ctx.obj["project_path"],
         model=ctx.obj["model"],
         api_key=ctx.obj["api_key"],
+        api_base=ctx.obj["api_base"],
         timeout=ctx.obj["timeout"],
     )
     asyncio.run(cli_instance.init())
@@ -133,6 +151,7 @@ def update(ctx):
         project_path=ctx.obj["project_path"],
         model=ctx.obj["model"],
         api_key=ctx.obj["api_key"],
+        api_base=ctx.obj["api_base"],
         timeout=ctx.obj["timeout"],
     )
     asyncio.run(cli_instance.update())
@@ -146,6 +165,7 @@ def refresh(ctx):
         project_path=ctx.obj["project_path"],
         model=ctx.obj["model"],
         api_key=ctx.obj["api_key"],
+        api_base=ctx.obj["api_base"],
         timeout=ctx.obj["timeout"],
     )
     asyncio.run(cli_instance.refresh())
