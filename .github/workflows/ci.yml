@@ -73,7 +73,7 @@ jobs:
         run: uv run ruff check .
 
   test:
-    name: Run tests
+    name: Run unit tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -93,11 +93,62 @@ jobs:
       - name: Install dependencies
         run: uv sync --dev
 
-      - name: Run tests with pytest
-        run: uv run pytest --cov=memory_banker --cov-report=xml --cov-report=term-missing
+      - name: Run unit tests (excluding API tests)
+        run: uv run pytest --tb=short -v -m "not requires_api"
+
+  test-coverage:
+    name: Run tests with coverage
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.13']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run unit tests with coverage
+        run: uv run pytest --cov=memory_banker --cov-report=xml --cov-report=term-missing --cov-fail-under=80 -m "not requires_api"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           fail_ci_if_error: false
+
+  test-api:
+    name: Run API integration tests
+    runs-on: ubuntu-latest
+    if: vars.OPENAI_API_KEY != '' || secrets.OPENAI_API_KEY != ''
+    strategy:
+      matrix:
+        python-version: ['3.13']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run API integration tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: uv run pytest -m "requires_api" --tb=short -v

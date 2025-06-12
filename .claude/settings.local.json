@@ -9,7 +9,15 @@
       "Bash(uv run:*)",
       "Bash(rm:*)",
       "Bash(uv sync:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(mv:*)",
+      "Bash(uv tool uninstall:*)",
+      "Bash(uv tool install:*)",
+      "Bash(memory-banker:*)",
+      "Bash(task check)",
+      "Bash(task fix)",
+      "Bash(rg:*)",
+      "Bash(git fetch:*)"
     ],
     "deny": []
   }

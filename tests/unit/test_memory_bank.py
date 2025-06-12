@@ -1,8 +1,6 @@
 """Unit tests for MemoryBank class."""
 
 import pytest
-from pathlib import Path
-from unittest.mock import patch, mock_open
 
 from memory_banker.memory_bank import MemoryBank
 
@@ -28,6 +26,7 @@ class TestMemoryBank:
             "systemPatterns.md",
             "techContext.md",
             "progress.md",
+            "aiGuidelines.md",
         ]
 
     def test_exists_false_when_directory_not_exists(self, memory_bank):

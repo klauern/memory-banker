@@ -18,7 +18,7 @@ Memory Banker is a Python CLI tool that uses OpenAI Agents to intelligently anal
 Memory banks are structured documentation files that help AI assistants understand your project's context, architecture, and current state. Inspired by [Cline's memory management system](https://docs.cline.bot/), they include:
 
 - **`projectbrief.md`** - Foundation document with project scope and requirements
-- **`productContext.md`** - Why the project exists and problem space analysis  
+- **`productContext.md`** - Why the project exists and problem space analysis
 - **`activeContext.md`** - Current development state and next steps
 - **`systemPatterns.md`** - Architecture and design patterns
 - **`techContext.md`** - Technology stack and development setup
@@ -31,7 +31,24 @@ Memory banks are structured documentation files that help AI assistants understa
 - Python 3.13 or higher
 - OpenAI API key
 
-### Using uv (Recommended)
+### Global Installation (Recommended)
+
+For global access to the `memory-banker` command from anywhere:
+
+```bash
+git clone https://github.com/yourusername/memory-banker.git
+cd memory-banker
+uv tool install .
+```
+
+After this, `memory-banker` will be available globally. To uninstall later:
+```bash
+uv tool uninstall memory-banker
+```
+
+### Local Development Installation
+
+For local development and testing:
 
 ```bash
 git clone https://github.com/yourusername/memory-banker.git
@@ -39,9 +56,7 @@ cd memory-banker
 uv sync
 ```
 
-This will install the package and make the `memory-banker` command available.
-
-### Using pip
+### Alternative: Using pip
 
 ```bash
 git clone https://github.com/yourusername/memory-banker.git
@@ -58,17 +73,17 @@ pip install -e .
 
 2. **Initialize a memory bank for your project:**
    ```bash
-   # Using uv (recommended)
-   uv run memory-banker init
-   
-   # Or if installed globally
+   # If installed globally (recommended)
    memory-banker init
+
+   # If using local development setup
+   uv run memory-banker init
    ```
 
 3. **Check the generated files:**
    ```bash
    ls memory-bank/
-   # projectbrief.md  productContext.md  activeContext.md  
+   # projectbrief.md  productContext.md  activeContext.md
    # systemPatterns.md  techContext.md  progress.md
    ```
 
@@ -80,7 +95,7 @@ pip install -e .
 # Initialize a new memory bank
 memory-banker init
 
-# Update existing memory bank files  
+# Update existing memory bank files
 memory-banker update
 
 # Completely refresh/rebuild the memory bank
@@ -134,12 +149,15 @@ Any model supported by the OpenAI Agents framework:
 
 ```
 memory-banker/
-├── main.py              # CLI entry point
 ├── memory_banker/       # Core package
-│   ├── __init__.py
+│   ├── __init__.py     # Package exports
+│   ├── main.py         # CLI entry point
 │   ├── cli.py          # CLI implementation
 │   ├── agents.py       # AI agents for analysis
 │   └── memory_bank.py  # Memory bank file management
+├── tests/              # Test suite
+│   ├── unit/           # Unit tests
+│   └── integration/    # Integration tests
 ├── pyproject.toml      # Project configuration
 └── README.md          # This file
 ```
@@ -179,7 +197,7 @@ After running `memory-banker init`, you'll get a `memory-bank/` directory with c
 ## Project Overview
 A comprehensive web application that solves X problem by providing Y solution...
 
-## Core Requirements and Goals  
+## Core Requirements and Goals
 - Implement user authentication and authorization
 - Provide real-time data synchronization
 - Support scalable microservices architecture
@@ -206,7 +224,10 @@ Currently implementing the user authentication system using JWT tokens...
 
 **Import Errors**:
 ```bash
-# Make sure you're in the right environment
+# If installed globally
+memory-banker --help
+
+# If using local development setup
 uv run memory-banker --help
 ```
 
@@ -230,18 +251,35 @@ ls -la
 
 ## Development
 
-### Running Tests
-
-```bash
-uv run pytest
-```
-
 ### Installing for Development
 
 ```bash
 git clone https://github.com/yourusername/memory-banker.git
 cd memory-banker
 uv sync --dev
+```
+
+### Running Tests
+
+```bash
+uv run pytest
+```
+
+### Local Testing
+
+Test the CLI locally during development:
+```bash
+uv run memory-banker --help
+uv run memory-banker init
+```
+
+### Global Installation for Testing
+
+To test the global installation:
+```bash
+uv tool install .
+memory-banker --help
+uv tool uninstall memory-banker  # When done testing
 ```
 
 ## Contributing

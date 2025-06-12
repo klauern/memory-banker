@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-memory-banker = "main:cli"
+memory-banker = "memory_banker:cli"
 
 [dependency-groups]
 dev = [

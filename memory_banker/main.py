@@ -1,10 +1,9 @@
 import asyncio
 from pathlib import Path
-from typing import Optional
 
 import click
 
-from memory_banker.cli import MemoryBankerCLI
+from .cli import MemoryBankerCLI
 
 
 @click.group()
@@ -29,7 +28,7 @@ from memory_banker.cli import MemoryBankerCLI
     help="Timeout in seconds for agent processing (default: 300)",
 )
 @click.pass_context
-def cli(ctx, project_path: Path, model: str, api_key: Optional[str], timeout: int):
+def cli(ctx, project_path: Path, model: str, api_key: str | None, timeout: int):
     """Memory Banker - Agentically create Cline-style memory banks"""
     ctx.ensure_object(dict)
     ctx.obj["cli"] = MemoryBankerCLI(
@@ -38,27 +37,45 @@ def cli(ctx, project_path: Path, model: str, api_key: Optional[str], timeout: in
 
 
 @cli.command()
+@click.option(
+    "--agents",
+    multiple=True,
+    help="Specific agents to run (can be used multiple times). Valid: projectbrief, productContext, activeContext, systemPatterns, techContext, progress, aiGuidelines",
+)
 @click.pass_context
-def init(ctx):
+def init(ctx, agents):
     """Initialize a new memory bank for the project"""
     cli_instance = ctx.obj["cli"]
-    asyncio.run(cli_instance.init())
+    agents_list = list(agents) if agents else None
+    asyncio.run(cli_instance.init(agents_list))
 
 
 @cli.command()
+@click.option(
+    "--agents",
+    multiple=True,
+    help="Specific agents to run (can be used multiple times). Valid: projectbrief, productContext, activeContext, systemPatterns, techContext, progress, aiGuidelines",
+)
 @click.pass_context
-def update(ctx):
+def update(ctx, agents):
     """Update existing memory bank files"""
     cli_instance = ctx.obj["cli"]
-    asyncio.run(cli_instance.update())
+    agents_list = list(agents) if agents else None
+    asyncio.run(cli_instance.update(agents_list))
 
 
 @cli.command()
+@click.option(
+    "--agents",
+    multiple=True,
+    help="Specific agents to run (can be used multiple times). Valid: projectbrief, productContext, activeContext, systemPatterns, techContext, progress, aiGuidelines",
+)
 @click.pass_context
-def refresh(ctx):
+def refresh(ctx, agents):
     """Completely refresh/rebuild the memory bank"""
     cli_instance = ctx.obj["cli"]
-    asyncio.run(cli_instance.refresh())
+    agents_list = list(agents) if agents else None
+    asyncio.run(cli_instance.refresh(agents_list))
 
 
 if __name__ == "__main__":
