@@ -9,27 +9,51 @@ from agents.extensions.models.litellm_model import LitellmModel
 
 class MemoryBankAgents:
     """Agents for analyzing projects and generating memory bank content"""
-    
+
     def __init__(self, llm_model: LitellmModel, timeout: int = 300):
         self.llm_model = llm_model
         self.timeout = timeout
-        
+
     async def analyze_project(self, project_path: Path) -> Dict[str, Any]:
         """Analyze a project and generate memory bank content using specialized agents"""
-        
+
         # Get project context
         project_context = self._get_project_context(project_path)
-        
+
         # Create specialized agents for each memory bank file
         agents_tasks = [
-            ("projectbrief", self._create_project_brief_agent(), "Generate a comprehensive project brief"),
-            ("productContext", self._create_product_context_agent(), "Analyze the product context and problem space"),
-            ("activeContext", self._create_active_context_agent(), "Determine current development context"),
-            ("systemPatterns", self._create_system_patterns_agent(), "Analyze system architecture and patterns"),
-            ("techContext", self._create_tech_context_agent(), "Document technical context and setup"),
-            ("progress", self._create_progress_agent(), "Assess project progress and status")
+            (
+                "projectbrief",
+                self._create_project_brief_agent(),
+                "Generate a comprehensive project brief",
+            ),
+            (
+                "productContext",
+                self._create_product_context_agent(),
+                "Analyze the product context and problem space",
+            ),
+            (
+                "activeContext",
+                self._create_active_context_agent(),
+                "Determine current development context",
+            ),
+            (
+                "systemPatterns",
+                self._create_system_patterns_agent(),
+                "Analyze system architecture and patterns",
+            ),
+            (
+                "techContext",
+                self._create_tech_context_agent(),
+                "Document technical context and setup",
+            ),
+            (
+                "progress",
+                self._create_progress_agent(),
+                "Assess project progress and status",
+            ),
         ]
-        
+
         # Run all agents with timeout
         results = {}
         for file_type, agent, description in agents_tasks:
@@ -37,27 +61,28 @@ class MemoryBankAgents:
             try:
                 # Apply timeout to the agent execution
                 result = await asyncio.wait_for(
-                    Runner.run(agent, project_context),
-                    timeout=self.timeout
+                    Runner.run(agent, project_context), timeout=self.timeout
                 )
-                
+
                 # Extract the actual text content from the RunResult
-                if hasattr(result, 'text'):
+                if hasattr(result, "text"):
                     content = result.text
-                elif hasattr(result, 'value'):
+                elif hasattr(result, "value"):
                     content = result.value
                 else:
                     # Parse the string representation to extract the content
                     result_str = str(result)
                     if "Final output (str):" in result_str:
-                        lines = result_str.split('\n')
+                        lines = result_str.split("\n")
                         content_lines = []
                         in_content = False
                         for line in lines:
                             if "Final output (str):" in line:
                                 in_content = True
                                 continue
-                            elif in_content and (line.startswith("- ") or line.startswith("(See")):
+                            elif in_content and (
+                                line.startswith("- ") or line.startswith("(See")
+                            ):
                                 break
                             elif in_content:
                                 # Remove the leading spaces that are part of the indentation
@@ -65,24 +90,26 @@ class MemoryBankAgents:
                                     content_lines.append(line[4:])
                                 else:
                                     content_lines.append(line)
-                        content = '\n'.join(content_lines).strip()
+                        content = "\n".join(content_lines).strip()
                     else:
                         content = result_str
-                
+
                 results[file_type] = content
-                
+
             except asyncio.TimeoutError:
                 print(f"⚠️  {description} timed out after {self.timeout} seconds")
-                results[file_type] = f"# {file_type.title()} (Generation Timed Out)\n\nThe agent timed out while generating this content. Please try again with a longer timeout using --timeout option."
-        
+                results[file_type] = (
+                    f"# {file_type.title()} (Generation Timed Out)\n\nThe agent timed out while generating this content. Please try again with a longer timeout using --timeout option."
+                )
+
         return results
-    
+
     def _get_project_context(self, project_path: Path) -> str:
         """Get comprehensive project context for analysis"""
         project_structure = self._get_project_structure(project_path)
         key_files = self._read_key_files(project_path)
         git_info = self._get_git_info(project_path)
-        
+
         return f"""
 PROJECT ANALYSIS CONTEXT
 
@@ -100,113 +127,157 @@ Project Name: {project_path.name}
 
 Please analyze this project thoroughly to understand its purpose, architecture, current state, and context.
 """
-        
+
     def _get_project_structure(self, project_path: Path, max_depth: int = 3) -> str:
         """Get a tree-like representation of the project structure"""
         structure = []
-        
+
         def add_to_structure(path: Path, prefix: str = "", depth: int = 0):
             if depth > max_depth:
                 return
-                
+
             # Skip common directories we don't care about
-            skip_dirs = {'.git', '__pycache__', 'node_modules', '.venv', 'venv', '.pytest_cache'}
-            
+            skip_dirs = {
+                ".git",
+                "__pycache__",
+                "node_modules",
+                ".venv",
+                "venv",
+                ".pytest_cache",
+            }
+
             if path.is_dir() and path.name in skip_dirs:
                 return
-                
+
             # Skip hidden files and directories (except important ones)
-            if path.name.startswith('.') and path.name not in {'.gitignore', '.env.example', '.python-version'}:
+            if path.name.startswith(".") and path.name not in {
+                ".gitignore",
+                ".env.example",
+                ".python-version",
+            }:
                 return
-                
+
             structure.append(f"{prefix}{path.name}")
-            
+
             if path.is_dir():
                 try:
-                    children = sorted(path.iterdir(), key=lambda x: (x.is_file(), x.name.lower()))
+                    children = sorted(
+                        path.iterdir(), key=lambda x: (x.is_file(), x.name.lower())
+                    )
                     for i, child in enumerate(children):
                         if i < 20:  # Limit to avoid too much output
                             is_last = i == len(children) - 1
                             new_prefix = prefix + ("└── " if is_last else "├── ")
                             add_to_structure(child, new_prefix, depth + 1)
                         elif i == 20:
-                            structure.append(f"{prefix}├── ... ({len(children) - 20} more items)")
+                            structure.append(
+                                f"{prefix}├── ... ({len(children) - 20} more items)"
+                            )
                             break
                 except PermissionError:
                     pass
-        
+
         add_to_structure(project_path)
         return "\n".join(structure)
-    
+
     def _read_key_files(self, project_path: Path) -> str:
         """Read content of key project files"""
         key_files = []
-        
+
         # Files to look for (in order of preference)
         file_patterns = [
-            'README.md', 'README.rst', 'README.txt',
-            'package.json', 'pyproject.toml', 'Cargo.toml', 'go.mod',
-            'requirements.txt', 'Pipfile', 'poetry.lock',
-            '.gitignore', 'Dockerfile', 'docker-compose.yml',
-            'CHANGELOG.md', 'CHANGELOG.rst',
-            'LICENSE', 'LICENSE.txt', 'LICENSE.md'
+            "README.md",
+            "README.rst",
+            "README.txt",
+            "package.json",
+            "pyproject.toml",
+            "Cargo.toml",
+            "go.mod",
+            "requirements.txt",
+            "Pipfile",
+            "poetry.lock",
+            ".gitignore",
+            "Dockerfile",
+            "docker-compose.yml",
+            "CHANGELOG.md",
+            "CHANGELOG.rst",
+            "LICENSE",
+            "LICENSE.txt",
+            "LICENSE.md",
         ]
-        
+
         for pattern in file_patterns:
             file_path = project_path / pattern
             if file_path.exists() and file_path.is_file():
                 try:
-                    content = file_path.read_text(encoding='utf-8', errors='ignore')
+                    content = file_path.read_text(encoding="utf-8", errors="ignore")
                     # Limit content length
                     if len(content) > 5000:
                         content = content[:5000] + "\n... (truncated)"
                     key_files.append(f"\n--- {pattern} ---\n{content}")
                 except Exception:
                     key_files.append(f"\n--- {pattern} ---\n[Could not read file]")
-        
+
         return "\n".join(key_files) if key_files else "[No key files found]"
-    
+
     def _get_git_info(self, project_path: Path) -> str:
         """Get git repository information"""
         git_info = []
-        
+
         try:
             import subprocess
-            
+
             # Check if it's a git repo
-            result = subprocess.run(['git', 'rev-parse', '--is-inside-work-tree'], 
-                                  cwd=project_path, capture_output=True, text=True)
+            result = subprocess.run(
+                ["git", "rev-parse", "--is-inside-work-tree"],
+                cwd=project_path,
+                capture_output=True,
+                text=True,
+            )
             if result.returncode != 0:
                 return "Not a git repository"
-            
+
             # Get current branch
-            result = subprocess.run(['git', 'branch', '--show-current'], 
-                                  cwd=project_path, capture_output=True, text=True)
+            result = subprocess.run(
+                ["git", "branch", "--show-current"],
+                cwd=project_path,
+                capture_output=True,
+                text=True,
+            )
             if result.returncode == 0:
                 git_info.append(f"Current branch: {result.stdout.strip()}")
-            
+
             # Get recent commits
-            result = subprocess.run(['git', 'log', '--oneline', '-10'], 
-                                  cwd=project_path, capture_output=True, text=True)
+            result = subprocess.run(
+                ["git", "log", "--oneline", "-10"],
+                cwd=project_path,
+                capture_output=True,
+                text=True,
+            )
             if result.returncode == 0:
                 git_info.append(f"Recent commits:\n{result.stdout.strip()}")
-            
+
             # Get git status
-            result = subprocess.run(['git', 'status', '--porcelain'], 
-                                  cwd=project_path, capture_output=True, text=True)
+            result = subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=project_path,
+                capture_output=True,
+                text=True,
+            )
             if result.returncode == 0:
                 if result.stdout.strip():
                     git_info.append(f"Uncommitted changes:\n{result.stdout.strip()}")
                 else:
                     git_info.append("Working directory clean")
-                    
+
         except Exception as e:
             git_info.append(f"Could not get git info: {e}")
-        
+
         return "\n".join(git_info)
-    
+
     def _create_project_info_tool(self, project_path: Path):
         """Create a tool for agents to request additional project information"""
+
         @function_tool
         def get_project_info(query: str) -> str:
             """Get additional information about the project based on a specific query"""
@@ -219,9 +290,9 @@ Please analyze this project thoroughly to understand its purpose, architecture, 
                 return self._get_git_info(project_path)
             else:
                 return f"Additional project information requested: {query}"
-        
+
         return get_project_info
-    
+
     def _create_project_brief_agent(self) -> Agent:
         """Create agent for generating project brief - the foundation document"""
         return Agent(
@@ -264,13 +335,13 @@ Analyze the project structure, code, dependencies, and documentation to extract 
 
 Format as complete markdown with clear hierarchy.""",
             model=self.llm_model,
-            tools=[]
+            tools=[],
         )
-    
+
     def _create_product_context_agent(self) -> Agent:
         """Create agent for analyzing product context - builds on project brief foundation"""
         return Agent(
-            name="ProductContextAgent", 
+            name="ProductContextAgent",
             instructions="""You are Cline's memory bank expert creating productContext.md that builds upon the foundation set in projectbrief.md.
 
 This document explains WHY this project exists and captures the deeper context that drives the project's purpose.
@@ -316,9 +387,9 @@ Analyze the project's code, dependencies, documentation, and structure to unders
 
 Format as complete markdown with clear sections.""",
             model=self.llm_model,
-            tools=[]
+            tools=[],
         )
-    
+
     def _create_active_context_agent(self) -> Agent:
         """Create agent for active context - builds on product, system, and tech context"""
         return Agent(
@@ -375,9 +446,9 @@ Analyze git history, file modifications, TODO comments, code structure, and deve
 
 Format as complete markdown with clear sections and actionable information.""",
             model=self.llm_model,
-            tools=[]
+            tools=[],
         )
-    
+
     def _create_system_patterns_agent(self) -> Agent:
         """Create agent for system patterns - builds on project brief foundation"""
         return Agent(
@@ -434,9 +505,9 @@ Analyze the codebase structure, imports, class hierarchies, function organizatio
 
 Format as complete markdown with clear sections and specific examples from the codebase.""",
             model=self.llm_model,
-            tools=[]
+            tools=[],
         )
-    
+
     def _create_tech_context_agent(self) -> Agent:
         """Create agent for tech context - builds on project brief foundation"""
         return Agent(
@@ -499,9 +570,9 @@ Analyze package files (pyproject.toml, package.json, etc.), configuration files,
 
 Format as complete markdown with specific commands, code examples, and actionable instructions.""",
             model=self.llm_model,
-            tools=[]
+            tools=[],
         )
-    
+
     def _create_progress_agent(self) -> Agent:
         """Create agent for progress tracking - builds on active context"""
         return Agent(
@@ -571,64 +642,80 @@ Analyze git history, code structure, test coverage, documentation completeness, 
 
 Format as complete markdown with specific examples and quantifiable progress indicators where possible.""",
             model=self.llm_model,
-            tools=[]
+            tools=[],
         )
-    
+
     def _extract_tech_stack(self, project_path: Path) -> str:
         """Extract technology stack from project files"""
         tech_stack = []
-        
+
         # Python
-        if (project_path / "pyproject.toml").exists() or (project_path / "requirements.txt").exists():
+        if (project_path / "pyproject.toml").exists() or (
+            project_path / "requirements.txt"
+        ).exists():
             tech_stack.append("- Python")
-            
+
         # Node.js
         if (project_path / "package.json").exists():
             tech_stack.append("- Node.js/JavaScript")
-            
+
         # Go
         if (project_path / "go.mod").exists():
             tech_stack.append("- Go")
-            
+
         # Rust
         if (project_path / "Cargo.toml").exists():
             tech_stack.append("- Rust")
-            
+
         # Docker
-        if (project_path / "Dockerfile").exists() or (project_path / "docker-compose.yml").exists():
+        if (project_path / "Dockerfile").exists() or (
+            project_path / "docker-compose.yml"
+        ).exists():
             tech_stack.append("- Docker")
-            
-        return "\n".join(tech_stack) if tech_stack else "Technology stack to be analyzed"
-    
+
+        return (
+            "\n".join(tech_stack) if tech_stack else "Technology stack to be analyzed"
+        )
+
     def _extract_dependencies(self, project_path: Path) -> str:
         """Extract key dependencies from project files"""
         deps = []
-        
+
         # Python dependencies
         pyproject = project_path / "pyproject.toml"
         requirements = project_path / "requirements.txt"
-        
+
         if pyproject.exists():
             try:
                 content = pyproject.read_text()
                 deps.append("Dependencies from pyproject.toml")
             except Exception:
                 pass
-                
+
         if requirements.exists():
             try:
                 content = requirements.read_text()
-                lines = [line.strip() for line in content.split('\n') if line.strip() and not line.startswith('#')]
+                lines = [
+                    line.strip()
+                    for line in content.split("\n")
+                    if line.strip() and not line.startswith("#")
+                ]
                 if lines:
-                    deps.extend([f"- {line.split('==')[0].split('>=')[0].split('~=')[0]}" for line in lines[:10]])
+                    deps.extend(
+                        [
+                            f"- {line.split('==')[0].split('>=')[0].split('~=')[0]}"
+                            for line in lines[:10]
+                        ]
+                    )
             except Exception:
                 pass
-        
+
         # Node.js dependencies
         package_json = project_path / "package.json"
         if package_json.exists():
             try:
                 import json
+
                 with open(package_json) as f:
                     data = json.load(f)
                     if "dependencies" in data:
@@ -637,5 +724,5 @@ Format as complete markdown with specific examples and quantifiable progress ind
                             deps.append(f"- {dep}")
             except Exception:
                 pass
-        
+
         return "\n".join(deps) if deps else "Dependencies to be analyzed"

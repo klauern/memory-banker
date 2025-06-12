@@ -12,33 +12,28 @@ from memory_banker.cli import MemoryBankerCLI
     "--project-path",
     type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
     default=Path.cwd(),
-    help="Path to project directory (default: current directory)"
+    help="Path to project directory (default: current directory)",
 )
 @click.option(
-    "--model",
-    default="gpt-4.1-mini",
-    help="LLM model to use (default: gpt-4.1-mini)"
+    "--model", default="gpt-4.1-mini", help="LLM model to use (default: gpt-4.1-mini)"
 )
 @click.option(
     "--api-key",
     envvar="OPENAI_API_KEY",
-    help="API key for the model (will use OPENAI_API_KEY env var if not provided)"
+    help="API key for the model (will use OPENAI_API_KEY env var if not provided)",
 )
 @click.option(
     "--timeout",
     type=int,
     default=300,
-    help="Timeout in seconds for agent processing (default: 300)"
+    help="Timeout in seconds for agent processing (default: 300)",
 )
 @click.pass_context
 def cli(ctx, project_path: Path, model: str, api_key: Optional[str], timeout: int):
     """Memory Banker - Agentically create Cline-style memory banks"""
     ctx.ensure_object(dict)
     ctx.obj["cli"] = MemoryBankerCLI(
-        project_path=project_path,
-        model=model,
-        api_key=api_key,
-        timeout=timeout
+        project_path=project_path, model=model, api_key=api_key, timeout=timeout
     )
 
 

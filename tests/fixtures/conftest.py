@@ -21,7 +21,7 @@ def python_project(temp_project_dir):
     """Create a minimal Python project structure."""
     project_path = temp_project_dir / "test_python_project"
     project_path.mkdir()
-    
+
     # Create pyproject.toml
     pyproject_content = """[project]
 name = "test-project"
@@ -37,7 +37,7 @@ dependencies = [
 test-cli = "test_project.main:cli"
 """
     (project_path / "pyproject.toml").write_text(pyproject_content)
-    
+
     # Create README.md
     readme_content = """# Test Project
 
@@ -62,12 +62,14 @@ test-cli --help
 ```
 """
     (project_path / "README.md").write_text(readme_content)
-    
+
     # Create source code
     src_dir = project_path / "test_project"
     src_dir.mkdir()
-    (src_dir / "__init__.py").write_text('"""Test project package."""\n__version__ = "0.1.0"')
-    
+    (src_dir / "__init__.py").write_text(
+        '"""Test project package."""\n__version__ = "0.1.0"'
+    )
+
     main_py_content = """\"\"\"Main CLI module for test project.\"\"\"
 
 import click
@@ -92,7 +94,7 @@ if __name__ == "__main__":
     cli()
 """
     (src_dir / "main.py").write_text(main_py_content)
-    
+
     # Create .gitignore
     gitignore_content = """__pycache__/
 *.py[cod]
@@ -116,7 +118,7 @@ wheels/
 *.egg
 """
     (project_path / ".gitignore").write_text(gitignore_content)
-    
+
     return project_path
 
 
@@ -125,7 +127,7 @@ def nodejs_project(temp_project_dir):
     """Create a minimal Node.js project structure."""
     project_path = temp_project_dir / "test_nodejs_project"
     project_path.mkdir()
-    
+
     # Create package.json
     package_json_content = """{
   "name": "test-nodejs-project",
@@ -145,7 +147,7 @@ def nodejs_project(temp_project_dir):
   }
 }"""
     (project_path / "package.json").write_text(package_json_content)
-    
+
     # Create README.md
     readme_content = """# Test Node.js Project
 
@@ -164,7 +166,7 @@ npm start
 ```
 """
     (project_path / "README.md").write_text(readme_content)
-    
+
     # Create index.js
     index_js_content = """const express = require('express');
 const axios = require('axios');
@@ -190,7 +192,7 @@ app.listen(port, () => {
 });
 """
     (project_path / "index.js").write_text(index_js_content)
-    
+
     return project_path
 
 
@@ -274,7 +276,6 @@ Test project for memory banker validation.
 - Use minimal viable structure
 - Focus on core validation patterns
 """,
-        
         "productContext": """# Product Context
 
 ## Why This Project Exists
@@ -298,7 +299,6 @@ Should generate comprehensive memory banks from minimal input.
 - Ensures quality of memory banker tool
 - Validates agent-based approach
 """,
-        
         "activeContext": """# Active Context
 
 ## Current Work Focus
@@ -330,7 +330,6 @@ Testing memory banker functionality and validation.
 - Focus on validation and testing
 - Ensure comprehensive coverage
 """,
-        
         "systemPatterns": """# System Patterns
 
 ## System Architecture Overview
@@ -361,7 +360,6 @@ Simple test project with minimal dependencies.
 - Standard project structure
 - Clear module organization
 """,
-        
         "techContext": """# Technical Context
 
 ## Technologies Used
@@ -401,7 +399,6 @@ Simple test project with minimal dependencies.
 - Check dependency versions
 - Validate environment setup
 """,
-        
         "progress": """# Progress Tracker
 
 ## What Works (Completed and Functional)
@@ -442,5 +439,5 @@ Simple test project with minimal dependencies.
 - Low risk due to testing scope
 - No production dependencies
 - Contained validation environment
-"""
+""",
     }
