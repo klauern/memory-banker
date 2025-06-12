@@ -14,7 +14,17 @@
       "Bash(grep:*)",
       "Bash(rg:*)",
       "Bash(uv tree:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(uv tool uninstall:*)",
+      "Bash(uv tool install:*)",
+      "Bash(memory-banker init:*)",
+      "Bash(env)",
+      "Bash(export OPENAI_BASE_URL=https://ai-gateway.zende.sk/v1)",
+      "WebFetch(domain:docs.litellm.ai)",
+      "Bash(timeout 30 uv run:*)",
+      "Bash(timeout 10 uv run:*)",
+      "WebFetch(domain:openai.github.io)",
+      "Bash(timeout 15 uv run:*)"
     ],
     "deny": []
   }

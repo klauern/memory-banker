@@ -100,6 +100,33 @@ class MemoryBankAgents:
                 results[file_type] = (
                     f"# {file_type.title()} (Generation Timed Out)\n\nThe agent timed out while generating this content. Please try again with a longer timeout using --timeout option."
                 )
+            except Exception as e:
+                print(f"❌ {description} failed: {str(e)}")
+
+                # Check for tracing-related errors and provide helpful suggestions
+                error_msg = str(e).lower()
+                if any(
+                    keyword in error_msg
+                    for keyword in [
+                        "tracing",
+                        "traces",
+                        "401",
+                        "unauthorized",
+                        "authentication",
+                    ]
+                ):
+                    print("💡 This error might be related to OpenAI Agents tracing.")
+                    print("   Try setting: export OPENAI_AGENTS_DISABLE_TRACING=1")
+                    print("   Or use a custom API base that handles tracing properly.")
+
+                results[file_type] = (
+                    f"# {file_type.title()} (Generation Failed)\n\n"
+                    f"The agent failed with error: {str(e)}\n\n"
+                    f"If this is a tracing or authentication error, try:\n"
+                    f"1. Set `export OPENAI_AGENTS_DISABLE_TRACING=1`\n"
+                    f"2. Verify your API key and base URL are correct\n"
+                    f"3. Check that your proxy supports OpenAI Agents tracing endpoints"
+                )
 
         return results
 

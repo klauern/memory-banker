@@ -29,6 +29,14 @@ class MemoryBankerCLI:
                 "API key must be provided via --api-key or OPENAI_API_KEY environment variable"
             )
 
+        # Enable LiteLLM debugging
+        os.environ["LITELLM_LOG"] = "DEBUG"
+
+        # Warn about custom API base (tracing disabled in main() function)
+        if self.api_base:
+            click.echo(f"⚠️  Custom API base detected: {self.api_base}")
+            click.echo("📡 OpenAI Agents tracing disabled to prevent data leakage")
+
         self.llm_model = LitellmModel(
             model=self.model, api_key=self.api_key, base_url=self.api_base
         )
@@ -173,4 +181,14 @@ def refresh(ctx):
 
 def main():
     """Entry point for the memory-banker CLI tool"""
+    import litellm
+
+    litellm._turn_on_debug()
+
+    # Check if custom API base is being used and disable tracing preemptively
+    # This must be done before any openai-agents imports
+    api_base = os.getenv("OPENAI_API_BASE")
+    if api_base:
+        os.environ["OPENAI_AGENTS_DISABLE_TRACING"] = "1"
+
     cli()
