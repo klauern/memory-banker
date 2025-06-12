@@ -20,7 +20,7 @@ class ServiceRule:
     description: str
     example: str = ""
     priority: str = "medium"  # low, medium, high
-    applies_to: list[str] = None  # list of file types or contexts
+    applies_to: Optional[list[str]] = None  # list of file types or contexts
 
 
 class AIServiceRules:
