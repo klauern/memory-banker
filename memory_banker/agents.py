@@ -6,6 +6,8 @@ from typing import Dict, Any, List
 from agents import Agent, Runner, function_tool
 from agents.extensions.models.litellm_model import LitellmModel
 
+from .ai_service_rules import AIServiceRules
+
 
 class MemoryBankAgents:
     """Agents for analyzing projects and generating memory bank content"""
@@ -13,6 +15,7 @@ class MemoryBankAgents:
     def __init__(self, llm_model: LitellmModel, timeout: int = 300):
         self.llm_model = llm_model
         self.timeout = timeout
+        self.ai_rules = AIServiceRules()
 
     async def analyze_project(self, project_path: Path) -> Dict[str, Any]:
         """Analyze a project and generate memory bank content using specialized agents"""
@@ -22,36 +25,12 @@ class MemoryBankAgents:
 
         # Create specialized agents for each memory bank file
         agents_tasks = [
-            (
-                "projectbrief",
-                self._create_project_brief_agent(),
-                "Generate a comprehensive project brief",
-            ),
-            (
-                "productContext",
-                self._create_product_context_agent(),
-                "Analyze the product context and problem space",
-            ),
-            (
-                "activeContext",
-                self._create_active_context_agent(),
-                "Determine current development context",
-            ),
-            (
-                "systemPatterns",
-                self._create_system_patterns_agent(),
-                "Analyze system architecture and patterns",
-            ),
-            (
-                "techContext",
-                self._create_tech_context_agent(),
-                "Document technical context and setup",
-            ),
-            (
-                "progress",
-                self._create_progress_agent(),
-                "Assess project progress and status",
-            ),
+            ("projectbrief", self._create_project_brief_agent(), "Generate a comprehensive project brief"),
+            ("productContext", self._create_product_context_agent(), "Analyze the product context and problem space"),
+            ("activeContext", self._create_active_context_agent(), "Determine current development context"),
+            ("systemPatterns", self._create_system_patterns_agent(), "Analyze system architecture and patterns"),
+            ("techContext", self._create_tech_context_agent(), "Document technical context and setup"),
+            ("progress", self._create_progress_agent(), "Assess project progress and status")
         ]
 
         # Run all agents with timeout
@@ -125,7 +104,11 @@ Project Name: {project_path.name}
 === GIT INFORMATION ===
 {git_info}
 
+=== AI ASSISTANT BEST PRACTICES ===
+{ai_rules}
+
 Please analyze this project thoroughly to understand its purpose, architecture, current state, and context.
+When generating memory bank content, incorporate relevant AI assistant best practices and patterns listed above.
 """
 
     def _get_project_structure(self, project_path: Path, max_depth: int = 3) -> str:
@@ -331,6 +314,13 @@ Create a project brief that includes:
 
 Remember: This document is the foundation that productContext.md, systemPatterns.md, and techContext.md will build upon. It must be comprehensive enough to guide all other documentation.
 
+## AI Assistant Integration Guidelines
+Incorporate relevant patterns and best practices from AI coding assistants (Cursor, Windsurf, Copilot, Claude) that are applicable to this project type. Focus on:
+- Code organization and naming conventions
+- Error handling and logging patterns
+- Testing and documentation standards
+- Security and performance considerations
+
 Analyze the project structure, code, dependencies, and documentation to extract the TRUE purpose and scope. Be specific, actionable, and definitive - this is the source of truth.
 
 Format as complete markdown with clear hierarchy.""",
@@ -441,6 +431,15 @@ Create comprehensive active context covering:
 - Specific areas where AI assistance is most valuable
 - Preferred communication and interaction patterns
 - Context that helps maintain continuity across sessions
+- AI assistant rules and patterns currently being followed
+- Coding conventions and standards in active use
+
+## AI Assistant Integration Status
+Document which AI assistant best practices are currently implemented:
+- Code quality standards being followed
+- Testing and documentation patterns in use
+- Error handling and logging conventions adopted
+- Security and performance practices implemented
 
 Analyze git history, file modifications, TODO comments, code structure, and development patterns. This document must provide enough context for an AI assistant to immediately understand the current state and continue work effectively.
 
@@ -500,6 +499,14 @@ Create comprehensive system patterns documentation covering:
 - Testing patterns and strategies
 - Documentation and commenting conventions
 - Refactoring and evolution strategies
+
+## AI Assistant Best Practices Integration
+When documenting system patterns, incorporate relevant AI assistant recommendations:
+- Follow established language-specific conventions and patterns
+- Design for modularity, reusability, and maintainability
+- Implement comprehensive error handling and logging
+- Ensure type safety and clear interfaces
+- Design patterns that support testing and debugging
 
 Analyze the codebase structure, imports, class hierarchies, function organization, and configuration files to understand the true architectural patterns. Reference the foundation established in projectbrief.md.
 

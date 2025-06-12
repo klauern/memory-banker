@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch, AsyncMock
 import subprocess
 
 from memory_banker.agents import MemoryBankAgents
+from memory_banker.ai_service_rules import AIServiceRules
 
 
 class TestMemoryBankAgents:
@@ -23,6 +24,7 @@ class TestMemoryBankAgents:
 
         assert agents.llm_model == mock_llm_model
         assert agents.timeout == 120
+        assert isinstance(agents.ai_rules, AIServiceRules)
 
     def test_init_default_timeout(self, mock_llm_model):
         """Test MemoryBankAgents initialization with default timeout."""
@@ -185,6 +187,7 @@ class TestMemoryBankAgents:
         assert "=== PROJECT STRUCTURE ===" in context
         assert "=== KEY FILES CONTENT ===" in context
         assert "=== GIT INFORMATION ===" in context
+        assert "=== AI ASSISTANT BEST PRACTICES ===" in context
         assert "Git info here" in context
         assert "pyproject.toml" in context
         assert "README.md" in context

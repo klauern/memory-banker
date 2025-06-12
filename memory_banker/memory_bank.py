@@ -13,6 +13,7 @@ class MemoryBank:
         "systemPatterns.md",
         "techContext.md",
         "progress.md",
+        "aiGuidelines.md"
     ]
 
     def __init__(self, project_path: Path):
@@ -42,6 +43,7 @@ class MemoryBank:
             "systemPatterns": "systemPatterns.md",
             "techContext": "techContext.md",
             "progress": "progress.md",
+            "aiGuidelines": "aiGuidelines.md"
         }
 
         for analysis_key, filename in file_mapping.items():
