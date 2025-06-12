@@ -1,11 +1,11 @@
 """Integration tests focusing on CLI interface only."""
 
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 from click.testing import CliRunner
-from unittest.mock import patch, Mock, AsyncMock
-from pathlib import Path
 
-from main import cli
+from memory_banker.cli import cli
 
 
 class TestCLIInterface:
@@ -71,7 +71,7 @@ class TestCLIInterface:
         assert result.exit_code != 0
         assert "Invalid value" in result.output
 
-    @patch("main.MemoryBankerCLI")
+    @patch("memory_banker.cli.MemoryBankerCLI")
     def test_parameter_passing(self, mock_cli_class, runner, temp_project_dir):
         """Test that CLI parameters are passed correctly to MemoryBankerCLI."""
         # Mock to prevent actual instantiation
@@ -79,7 +79,7 @@ class TestCLIInterface:
         mock_cli_instance.init = AsyncMock()
         mock_cli_class.return_value = mock_cli_instance
 
-        result = runner.invoke(
+        runner.invoke(
             cli,
             [
                 "--project-path",
@@ -102,7 +102,7 @@ class TestCLIInterface:
             timeout=600,
         )
 
-    @patch("main.MemoryBankerCLI")
+    @patch("memory_banker.cli.MemoryBankerCLI")
     def test_environment_api_key(
         self, mock_cli_class, runner, temp_project_dir, monkeypatch
     ):
@@ -113,13 +113,13 @@ class TestCLIInterface:
         mock_cli_instance.init = AsyncMock()
         mock_cli_class.return_value = mock_cli_instance
 
-        result = runner.invoke(cli, ["--project-path", str(temp_project_dir), "init"])
+        runner.invoke(cli, ["--project-path", str(temp_project_dir), "init"])
 
         # Should use environment API key
         args, kwargs = mock_cli_class.call_args
         assert kwargs["api_key"] == "env-api-key"
 
-    @patch("main.MemoryBankerCLI")
+    @patch("memory_banker.cli.MemoryBankerCLI")
     def test_default_values(
         self, mock_cli_class, runner, temp_project_dir, monkeypatch
     ):
@@ -130,7 +130,7 @@ class TestCLIInterface:
         mock_cli_instance.init = AsyncMock()
         mock_cli_class.return_value = mock_cli_instance
 
-        result = runner.invoke(cli, ["--project-path", str(temp_project_dir), "init"])
+        runner.invoke(cli, ["--project-path", str(temp_project_dir), "init"])
 
         args, kwargs = mock_cli_class.call_args
         assert kwargs["model"] == "gpt-4.1-mini"  # Default model

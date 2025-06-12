@@ -1,8 +1,6 @@
 """Unit tests for MemoryBank class."""
 
 import pytest
-from pathlib import Path
-from unittest.mock import patch, mock_open
 
 from memory_banker.memory_bank import MemoryBank
 

@@ -33,13 +33,19 @@ Memory banks are structured documentation files that help AI assistants understa
 
 ### Using uv (Recommended)
 
+#### Option 1: Install as a tool (global)
+```bash
+uv tool install git+https://github.com/yourusername/memory-banker.git
+```
+
+#### Option 2: Development installation
 ```bash
 git clone https://github.com/yourusername/memory-banker.git
 cd memory-banker
 uv sync
 ```
 
-This will install the package and make the `memory-banker` command available.
+Both options will make the `memory-banker` command available.
 
 ### Using pip
 
@@ -134,10 +140,9 @@ Any model supported by the OpenAI Agents framework:
 
 ```
 memory-banker/
-├── main.py              # CLI entry point
 ├── memory_banker/       # Core package
 │   ├── __init__.py
-│   ├── cli.py          # CLI implementation
+│   ├── cli.py          # CLI entry point and implementation
 │   ├── agents.py       # AI agents for analysis
 │   └── memory_bank.py  # Memory bank file management
 ├── pyproject.toml      # Project configuration

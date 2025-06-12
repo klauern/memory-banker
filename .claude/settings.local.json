@@ -9,7 +9,11 @@
       "Bash(uv run:*)",
       "Bash(rm:*)",
       "Bash(uv sync:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(uv tree:*)"
     ],
     "deny": []
   }

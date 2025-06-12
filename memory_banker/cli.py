@@ -1,9 +1,8 @@
+import asyncio
 import os
 from pathlib import Path
-from typing import Optional
 
 import click
-from agents import Agent, Runner
 from agents.extensions.models.litellm_model import LitellmModel
 
 from .agents import MemoryBankAgents
@@ -15,7 +14,7 @@ class MemoryBankerCLI:
         self,
         project_path: Path,
         model: str,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         timeout: int = 300,
     ):
         self.project_path = project_path
@@ -79,3 +78,79 @@ class MemoryBankerCLI:
 
         # Reinitialize
         await self.init()
+
+
+@click.group()
+@click.option(
+    "--project-path",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    default=Path.cwd(),
+    help="Path to project directory (default: current directory)",
+)
+@click.option(
+    "--model", default="gpt-4.1-mini", help="LLM model to use (default: gpt-4.1-mini)"
+)
+@click.option(
+    "--api-key",
+    envvar="OPENAI_API_KEY",
+    help="API key for the model (will use OPENAI_API_KEY env var if not provided)",
+)
+@click.option(
+    "--timeout",
+    type=int,
+    default=300,
+    help="Timeout in seconds for agent processing (default: 300)",
+)
+@click.pass_context
+def cli(ctx, project_path: Path, model: str, api_key: str | None, timeout: int):
+    """Memory Banker - Agentically create Cline-style memory banks"""
+    ctx.ensure_object(dict)
+    # Store parameters in context, don't instantiate CLI until needed
+    ctx.obj["project_path"] = project_path
+    ctx.obj["model"] = model
+    ctx.obj["api_key"] = api_key
+    ctx.obj["timeout"] = timeout
+
+
+@cli.command()
+@click.pass_context
+def init(ctx):
+    """Initialize a new memory bank for the project"""
+    cli_instance = MemoryBankerCLI(
+        project_path=ctx.obj["project_path"],
+        model=ctx.obj["model"],
+        api_key=ctx.obj["api_key"],
+        timeout=ctx.obj["timeout"],
+    )
+    asyncio.run(cli_instance.init())
+
+
+@cli.command()
+@click.pass_context
+def update(ctx):
+    """Update existing memory bank files"""
+    cli_instance = MemoryBankerCLI(
+        project_path=ctx.obj["project_path"],
+        model=ctx.obj["model"],
+        api_key=ctx.obj["api_key"],
+        timeout=ctx.obj["timeout"],
+    )
+    asyncio.run(cli_instance.update())
+
+
+@cli.command()
+@click.pass_context
+def refresh(ctx):
+    """Completely refresh/rebuild the memory bank"""
+    cli_instance = MemoryBankerCLI(
+        project_path=ctx.obj["project_path"],
+        model=ctx.obj["model"],
+        api_key=ctx.obj["api_key"],
+        timeout=ctx.obj["timeout"],
+    )
+    asyncio.run(cli_instance.refresh())
+
+
+def main():
+    """Entry point for the memory-banker CLI tool"""
+    cli()
