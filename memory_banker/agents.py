@@ -1,7 +1,6 @@
 import asyncio
-import os
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 
 from agents import Agent, Runner, function_tool
 from agents.extensions.models.litellm_model import LitellmModel
@@ -14,7 +13,7 @@ class MemoryBankAgents:
         self.llm_model = llm_model
         self.timeout = timeout
 
-    async def analyze_project(self, project_path: Path) -> Dict[str, Any]:
+    async def analyze_project(self, project_path: Path) -> dict[str, Any]:
         """Analyze a project and generate memory bank content using specialized agents"""
 
         # Get project context
@@ -96,7 +95,7 @@ class MemoryBankAgents:
 
                 results[file_type] = content
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 print(f"⚠️  {description} timed out after {self.timeout} seconds")
                 results[file_type] = (
                     f"# {file_type.title()} (Generation Timed Out)\n\nThe agent timed out while generating this content. Please try again with a longer timeout using --timeout option."

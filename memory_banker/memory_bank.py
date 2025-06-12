@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
 
 class MemoryBank:
@@ -33,7 +33,7 @@ class MemoryBank:
         if self.memory_bank_path.exists():
             shutil.rmtree(self.memory_bank_path)
 
-    async def create_files(self, analysis: Dict[str, Any]):
+    async def create_files(self, analysis: dict[str, Any]):
         """Create all memory bank files based on agent analysis"""
         file_mapping = {
             "projectbrief": "projectbrief.md",
@@ -50,7 +50,7 @@ class MemoryBank:
                 content = analysis[analysis_key]
                 file_path.write_text(content, encoding="utf-8")
 
-    async def update_files(self, analysis: Dict[str, Any]):
+    async def update_files(self, analysis: dict[str, Any]):
         """Update existing memory bank files"""
         # For now, just recreate all files
         # In the future, we could be smarter about preserving manual edits

@@ -1,10 +1,9 @@
 """Unit tests for MemoryBankAgents class."""
 
-import pytest
 import asyncio
-from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
-import subprocess
+from unittest.mock import Mock, patch
+
+import pytest
 
 from memory_banker.agents import MemoryBankAgents
 

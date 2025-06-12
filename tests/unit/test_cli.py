@@ -1,8 +1,8 @@
 """Unit tests for MemoryBankerCLI class."""
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
-from pathlib import Path
 
 from memory_banker.cli import MemoryBankerCLI
 

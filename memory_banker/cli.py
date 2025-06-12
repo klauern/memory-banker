@@ -1,10 +1,8 @@
 import asyncio
 import os
 from pathlib import Path
-from typing import Optional
 
 import click
-from agents import Agent, Runner
 from agents.extensions.models.litellm_model import LitellmModel
 
 from .agents import MemoryBankAgents
@@ -16,7 +14,7 @@ class MemoryBankerCLI:
         self,
         project_path: Path,
         model: str,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         timeout: int = 300,
     ):
         self.project_path = project_path
@@ -104,7 +102,7 @@ class MemoryBankerCLI:
     help="Timeout in seconds for agent processing (default: 300)",
 )
 @click.pass_context
-def cli(ctx, project_path: Path, model: str, api_key: Optional[str], timeout: int):
+def cli(ctx, project_path: Path, model: str, api_key: str | None, timeout: int):
     """Memory Banker - Agentically create Cline-style memory banks"""
     ctx.ensure_object(dict)
     ctx.obj["cli"] = MemoryBankerCLI(

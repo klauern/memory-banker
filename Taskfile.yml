@@ -1,23 +1,21 @@
 version: '3'
 
 vars:
-  PYTHON: python
-  PIP: pip
-  PYTEST: pytest
-  RUFF: ruff
+  UV: uv
+  PYTEST: uv run pytest
+  RUFF: uv run ruff
 
 tasks:
   # Development setup
   install:
     desc: Install project dependencies and development tools
     cmds:
-      - "{{.PIP}} install -e ."
-      - "{{.PIP}} install -e .[dev]"
+      - "{{.UV}} sync --group dev"
 
   install-prod:
     desc: Install only production dependencies
     cmds:
-      - "{{.PIP}} install -e ."
+      - "{{.UV}} sync"
 
   # Code quality
   lint:
@@ -75,18 +73,18 @@ tasks:
   run:
     desc: Run the application
     cmds:
-      - "{{.PYTHON}} main.py"
+      - "{{.UV}} run memory-banker"
 
   dev:
     desc: Run the application in development mode
     cmds:
-      - "{{.PYTHON}} main.py"
+      - "{{.UV}} run memory-banker"
 
   # Build and package
   build:
     desc: Build the package
     cmds:
-      - "{{.PYTHON}} -m build"
+      - "{{.UV}} build"
 
   clean:
     desc: Clean build artifacts and cache files
@@ -135,9 +133,24 @@ tasks:
 
   # Utility tasks
   deps-update:
-    desc: Update dependencies (manual review required)
+    desc: Update dependencies
     cmds:
-      - echo "Review and update dependencies in pyproject.toml manually"
+      - "{{.UV}} lock --upgrade"
+
+  deps-add:
+    desc: "Add a new dependency (usage: task deps-add -- package-name)"
+    cmds:
+      - "{{.UV}} add {{.CLI_ARGS}}"
+
+  deps-add-dev:
+    desc: "Add a new dev dependency (usage: task deps-add-dev -- package-name)"
+    cmds:
+      - "{{.UV}} add --group dev {{.CLI_ARGS}}"
+
+  venv-info:
+    desc: Show virtual environment information
+    cmds:
+      - "{{.UV}} venv --python-info"
 
   version:
     desc: Show current version
