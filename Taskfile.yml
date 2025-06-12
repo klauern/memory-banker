@@ -3,21 +3,20 @@ version: '3'
 vars:
   PYTHON: python
   PIP: pip
-  PYTEST: pytest
-  RUFF: ruff
+  PYTEST: uv run pytest
+  RUFF: uv run ruff
 
 tasks:
   # Development setup
   install:
     desc: Install project dependencies and development tools
     cmds:
-      - "{{.PIP}} install -e ."
-      - "{{.PIP}} install -e .[dev]"
+      - "uv sync --dev"
 
   install-prod:
     desc: Install only production dependencies
     cmds:
-      - "{{.PIP}} install -e ."
+      - "uv sync"
 
   # Code quality
   lint:
@@ -52,41 +51,61 @@ tasks:
 
   # Testing
   test:
-    desc: Run all tests
+    desc: Run unit tests (excluding API tests)
+    cmds:
+      - "{{.PYTEST}} -m 'not requires_api'"
+
+  test-all:
+    desc: Run all tests (same as test for now)
     cmds:
       - "{{.PYTEST}}"
 
-  test-verbose:
-    desc: Run tests with verbose output
+  test-unit:
+    desc: Run unit tests only (alias for test)
     cmds:
-      - "{{.PYTEST}} -v"
+      - task: test
+
+  test-verbose:
+    desc: Run unit tests with verbose output
+    cmds:
+      - "{{.PYTEST}} -v -m 'not requires_api'"
 
   test-cov:
-    desc: Run tests with coverage report
+    desc: Run unit tests with coverage report
     cmds:
-      - "{{.PYTEST}} --cov=memory_banker --cov-report=html --cov-report=term"
+      - "{{.PYTEST}} --cov=memory_banker --cov-report=html --cov-report=term-missing --cov-fail-under=80 -m 'not requires_api'"
 
   test-watch:
-    desc: Run tests in watch mode
+    desc: Run unit tests in watch mode
     cmds:
-      - "{{.PYTEST}} -f"
+      - "{{.PYTEST}} -f -m 'not requires_api'"
+
+  test-fast:
+    desc: Run unit tests without coverage (fastest)
+    cmds:
+      - "{{.PYTEST}} -m 'not requires_api' --tb=short"
+
+  test-api:
+    desc: Run API integration tests (requires OPENAI_API_KEY)
+    cmds:
+      - "{{.PYTEST}} -m 'requires_api' -v"
 
   # Application
   run:
     desc: Run the application
     cmds:
-      - "{{.PYTHON}} main.py"
+      - "uv run memory-banker --help"
 
   dev:
     desc: Run the application in development mode
     cmds:
-      - "{{.PYTHON}} main.py"
+      - "uv run memory-banker --help"
 
   # Build and package
   build:
     desc: Build the package
     cmds:
-      - "{{.PYTHON}} -m build"
+      - "uv build"
 
   clean:
     desc: Clean build artifacts and cache files
@@ -109,7 +128,7 @@ tasks:
       - task: test
 
   ci:
-    desc: Run continuous integration checks
+    desc: Run continuous integration checks (lint, format, test with coverage)
     cmds:
       - task: check
       - task: test-cov
@@ -120,7 +139,7 @@ tasks:
       - task: install
       - task: check
       - task: test
-    
+
   # Git hooks simulation
   pre-push:
     desc: Run checks before pushing (simulate pre-push hook)

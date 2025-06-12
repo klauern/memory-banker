@@ -18,7 +18,7 @@ Memory Banker is a Python CLI tool that uses OpenAI Agents to intelligently anal
 Memory banks are structured documentation files that help AI assistants understand your project's context, architecture, and current state. Inspired by [Cline's memory management system](https://docs.cline.bot/), they include:
 
 - **`projectbrief.md`** - Foundation document with project scope and requirements
-- **`productContext.md`** - Why the project exists and problem space analysis  
+- **`productContext.md`** - Why the project exists and problem space analysis
 - **`activeContext.md`** - Current development state and next steps
 - **`systemPatterns.md`** - Architecture and design patterns
 - **`techContext.md`** - Technology stack and development setup
@@ -75,7 +75,7 @@ pip install -e .
    ```bash
    # If installed globally (recommended)
    memory-banker init
-   
+
    # If using local development setup
    uv run memory-banker init
    ```
@@ -83,7 +83,7 @@ pip install -e .
 3. **Check the generated files:**
    ```bash
    ls memory-bank/
-   # projectbrief.md  productContext.md  activeContext.md  
+   # projectbrief.md  productContext.md  activeContext.md
    # systemPatterns.md  techContext.md  progress.md
    ```
 
@@ -95,7 +95,7 @@ pip install -e .
 # Initialize a new memory bank
 memory-banker init
 
-# Update existing memory bank files  
+# Update existing memory bank files
 memory-banker update
 
 # Completely refresh/rebuild the memory bank
@@ -197,7 +197,7 @@ After running `memory-banker init`, you'll get a `memory-bank/` directory with c
 ## Project Overview
 A comprehensive web application that solves X problem by providing Y solution...
 
-## Core Requirements and Goals  
+## Core Requirements and Goals
 - Implement user authentication and authorization
 - Provide real-time data synchronization
 - Support scalable microservices architecture
