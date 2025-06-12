@@ -1,0 +1,157 @@
+version: '3'
+
+vars:
+  PYTHON: python
+  PIP: pip
+  PYTEST: pytest
+  RUFF: ruff
+
+tasks:
+  # Development setup
+  install:
+    desc: Install project dependencies and development tools
+    cmds:
+      - "{{.PIP}} install -e ."
+      - "{{.PIP}} install -e .[dev]"
+
+  install-prod:
+    desc: Install only production dependencies
+    cmds:
+      - "{{.PIP}} install -e ."
+
+  # Code quality
+  lint:
+    desc: Run linting with ruff
+    cmds:
+      - "{{.RUFF}} check ."
+
+  lint-fix:
+    desc: Run linting with ruff and auto-fix issues
+    cmds:
+      - "{{.RUFF}} check --fix ."
+
+  format:
+    desc: Format code with ruff
+    cmds:
+      - "{{.RUFF}} format ."
+
+  format-check:
+    desc: Check code formatting without making changes
+    cmds:
+      - "{{.RUFF}} format --check ."
+
+  check:
+    desc: Run all code quality checks
+    deps: [lint, format-check]
+
+  fix:
+    desc: Auto-fix all possible issues
+    cmds:
+      - task: lint-fix
+      - task: format
+
+  # Testing
+  test:
+    desc: Run all tests
+    cmds:
+      - "{{.PYTEST}}"
+
+  test-verbose:
+    desc: Run tests with verbose output
+    cmds:
+      - "{{.PYTEST}} -v"
+
+  test-cov:
+    desc: Run tests with coverage report
+    cmds:
+      - "{{.PYTEST}} --cov=memory_banker --cov-report=html --cov-report=term"
+
+  test-watch:
+    desc: Run tests in watch mode
+    cmds:
+      - "{{.PYTEST}} -f"
+
+  # Application
+  run:
+    desc: Run the application
+    cmds:
+      - "{{.PYTHON}} main.py"
+
+  dev:
+    desc: Run the application in development mode
+    cmds:
+      - "{{.PYTHON}} main.py"
+
+  # Build and package
+  build:
+    desc: Build the package
+    cmds:
+      - "{{.PYTHON}} -m build"
+
+  clean:
+    desc: Clean build artifacts and cache files
+    cmds:
+      - rm -rf build/
+      - rm -rf dist/
+      - rm -rf *.egg-info/
+      - rm -rf .pytest_cache/
+      - rm -rf htmlcov/
+      - rm -rf .coverage
+      - find . -type d -name __pycache__ -exec rm -rf {} +
+      - find . -type f -name "*.pyc" -delete
+
+  # Development workflow
+  pre-commit:
+    desc: Run all pre-commit checks (format, lint, test)
+    cmds:
+      - task: format
+      - task: lint
+      - task: test
+
+  ci:
+    desc: Run continuous integration checks
+    cmds:
+      - task: check
+      - task: test-cov
+
+  setup-dev:
+    desc: Complete development environment setup
+    cmds:
+      - task: install
+      - task: check
+      - task: test
+    
+  # Git hooks simulation
+  pre-push:
+    desc: Run checks before pushing (simulate pre-push hook)
+    cmds:
+      - task: ci
+
+  # Documentation (if needed in future)
+  docs-serve:
+    desc: Serve documentation locally (placeholder)
+    cmds:
+      - echo "Documentation serving not yet implemented"
+
+  # Utility tasks
+  deps-update:
+    desc: Update dependencies (manual review required)
+    cmds:
+      - echo "Review and update dependencies in pyproject.toml manually"
+
+  version:
+    desc: Show current version
+    cmds:
+      - grep "version" pyproject.toml
+
+  help:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  # Default task
+  default:
+    desc: Run default development checks
+    cmds:
+      - task: check
+      - task: test
