@@ -1,7 +1,6 @@
 import asyncio
-import os
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 
 from agents import Agent, Runner, function_tool
 from agents.extensions.models.litellm_model import LitellmModel
@@ -17,7 +16,7 @@ class MemoryBankAgents:
         self.timeout = timeout
         self.ai_rules = AIServiceRules()
 
-    async def analyze_project(self, project_path: Path) -> Dict[str, Any]:
+    async def analyze_project(self, project_path: Path) -> dict[str, Any]:
         """Analyze a project and generate memory bank content using specialized agents"""
 
         # Get project context
@@ -31,6 +30,11 @@ class MemoryBankAgents:
             ("systemPatterns", self._create_system_patterns_agent(), "Analyze system architecture and patterns"),
             ("techContext", self._create_tech_context_agent(), "Document technical context and setup"),
             ("progress", self._create_progress_agent(), "Assess project progress and status")
+            (
+                "aiGuidelines",
+                self._create_ai_guidelines_agent(),
+                "Generate AI assistant guidelines and best practices",
+            ),
         ]
 
         # Run all agents with timeout
@@ -75,7 +79,7 @@ class MemoryBankAgents:
 
                 results[file_type] = content
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 print(f"⚠️  {description} timed out after {self.timeout} seconds")
                 results[file_type] = (
                     f"# {file_type.title()} (Generation Timed Out)\n\nThe agent timed out while generating this content. Please try again with a longer timeout using --timeout option."
@@ -88,6 +92,7 @@ class MemoryBankAgents:
         project_structure = self._get_project_structure(project_path)
         key_files = self._read_key_files(project_path)
         git_info = self._get_git_info(project_path)
+        ai_rules = self._get_ai_service_rules(project_path)
 
         return f"""
 PROJECT ANALYSIS CONTEXT
@@ -257,6 +262,35 @@ When generating memory bank content, incorporate relevant AI assistant best prac
             git_info.append(f"Could not get git info: {e}")
 
         return "\n".join(git_info)
+
+    def _get_ai_service_rules(self, project_path: Path) -> str:
+        """Get relevant AI service rules for this project"""
+        applicable_rules = self.ai_rules.get_applicable_rules(project_path)
+        high_priority_rules = [
+            rule for rule in applicable_rules if rule.priority == "high"
+        ]
+
+        # Format rules for inclusion in context
+        if not applicable_rules:
+            return "No specific AI assistant rules identified for this project type."
+
+        formatted_rules = []
+        formatted_rules.append("Key AI Assistant Recommendations:")
+
+        # Include high priority rules first
+        for rule in high_priority_rules[:5]:  # Limit to top 5 high priority
+            formatted_rules.append(
+                f"- {rule.title} ({rule.service}): {rule.description}"
+            )
+
+        # Add a few medium priority rules if space allows
+        medium_rules = [rule for rule in applicable_rules if rule.priority == "medium"]
+        for rule in medium_rules[:3]:  # Limit to top 3 medium priority
+            formatted_rules.append(
+                f"- {rule.title} ({rule.service}): {rule.description}"
+            )
+
+        return "\n".join(formatted_rules)
 
     def _create_project_info_tool(self, project_path: Path):
         """Create a tool for agents to request additional project information"""
@@ -733,3 +767,64 @@ Format as complete markdown with specific examples and quantifiable progress ind
                 pass
 
         return "\n".join(deps) if deps else "Dependencies to be analyzed"
+
+    def _create_ai_guidelines_agent(self) -> Agent:
+        """Create agent for AI assistant guidelines and best practices"""
+        return Agent(
+            name="AIGuidelinesAgent",
+            instructions="""You are Cline's memory bank expert creating aiGuidelines.md that provides comprehensive AI assistant guidance tailored to this specific project.
+
+This document serves as a reference for AI assistants working on this project, incorporating best practices from Cursor, Windsurf, Copilot, Claude, and other AI coding tools.
+
+Create comprehensive AI assistant guidelines covering:
+
+## Project-Specific AI Assistant Rules
+Based on the project analysis and AI assistant best practices provided in the context, create specific guidelines for:
+- Code style and naming conventions to follow
+- Architectural patterns and design principles to maintain
+- Testing approaches and documentation standards
+- Error handling and logging patterns
+- Security considerations and validation requirements
+
+## Interaction Patterns and Preferences
+- Preferred communication style for this project
+- How to handle complex refactoring or architectural changes
+- Guidelines for code review and suggestion formatting
+- When to ask for clarification vs. making assumptions
+- How to present multiple solution options
+
+## Context and Continuity Guidelines
+- What information to track across sessions
+- How to maintain awareness of recent changes
+- Key files and patterns to reference consistently
+- Important constraints and boundaries to respect
+- Project-specific gotchas and common issues
+
+## Quality Standards and Best Practices
+Document the specific quality standards for this project:
+- Code formatting and linting requirements
+- Testing coverage expectations and strategies
+- Documentation standards and requirements
+- Performance considerations and optimization approaches
+- Security practices and validation patterns
+
+## AI Tool Integration
+- How to leverage different AI assistant capabilities effectively
+- When to use various AI tools (code completion, chat, refactoring)
+- Workflow patterns that work well for this project type
+- Integration with existing development tools and processes
+
+## Project Evolution Guidance
+- How to handle feature additions and changes
+- Approaches for technical debt and refactoring
+- Guidelines for maintaining backwards compatibility
+- Strategies for performance optimization and scaling
+
+Analyze the project's current patterns, the AI assistant best practices provided in context, and create specific, actionable guidelines that will help AI assistants work more effectively on this project.
+
+Include specific examples from the codebase where relevant, and reference the established patterns from other memory bank files.
+
+Format as complete markdown with clear sections and practical guidance.""",
+            model=self.llm_model,
+            tools=[],
+        )

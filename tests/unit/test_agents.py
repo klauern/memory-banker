@@ -1,13 +1,11 @@
 """Unit tests for MemoryBankAgents class."""
 
-import pytest
 import asyncio
-from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
-import subprocess
+from unittest.mock import Mock, patch
+
+import pytest
 
 from memory_banker.agents import MemoryBankAgents
-from memory_banker.ai_service_rules import AIServiceRules
 
 
 class TestMemoryBankAgents:
@@ -253,6 +251,7 @@ class TestMemoryBankAgents:
                 "systemPatterns",
                 "techContext",
                 "progress",
+                "aiGuidelines",
             ]:
                 assert agent_type in results
                 assert "timed out" in results[agent_type]
@@ -273,3 +272,23 @@ class TestMemoryBankAgents:
         # Test tech stack extraction
         tech_stack = agents._extract_tech_stack(python_project)
         assert "- Python" in tech_stack
+
+    def test_get_ai_service_rules(self, agents, python_project):
+        """Test _get_ai_service_rules() returns relevant rules."""
+        rules = agents._get_ai_service_rules(python_project)
+
+        assert "Key AI Assistant Recommendations:" in rules
+        # Should have some rules for a Python project
+        assert len(rules) > 50  # Should have meaningful content
+
+    def test_get_ai_service_rules_empty_project(self, agents, empty_project):
+        """Test _get_ai_service_rules() handles empty project."""
+        rules = agents._get_ai_service_rules(empty_project)
+
+        # Should still return some general rules
+        assert "Key AI Assistant Recommendations:" in rules
+
+    def test_ai_rules_initialization(self, agents):
+        """Test that agents have ai_rules initialized."""
+        assert hasattr(agents, "ai_rules")
+        assert agents.ai_rules is not None

@@ -1,9 +1,9 @@
 """Integration tests focusing on CLI interface only."""
 
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 from click.testing import CliRunner
-from unittest.mock import patch, Mock, AsyncMock
-from pathlib import Path
 
 from memory_banker.main import cli
 

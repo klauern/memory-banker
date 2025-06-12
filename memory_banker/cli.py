@@ -1,9 +1,7 @@
 import os
 from pathlib import Path
-from typing import Optional
 
 import click
-from agents import Agent, Runner
 from agents.extensions.models.litellm_model import LitellmModel
 
 from .agents import MemoryBankAgents
@@ -15,7 +13,7 @@ class MemoryBankerCLI:
         self,
         project_path: Path,
         model: str,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         timeout: int = 300,
     ):
         self.project_path = project_path

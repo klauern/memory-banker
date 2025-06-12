@@ -1,6 +1,5 @@
 import asyncio
 from pathlib import Path
-from typing import Optional
 
 import click
 
@@ -29,7 +28,7 @@ from .cli import MemoryBankerCLI
     help="Timeout in seconds for agent processing (default: 300)",
 )
 @click.pass_context
-def cli(ctx, project_path: Path, model: str, api_key: Optional[str], timeout: int):
+def cli(ctx, project_path: Path, model: str, api_key: str | None, timeout: int):
     """Memory Banker - Agentically create Cline-style memory banks"""
     ctx.ensure_object(dict)
     ctx.obj["cli"] = MemoryBankerCLI(

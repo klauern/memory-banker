@@ -2,10 +2,9 @@
 
 import tempfile
 from pathlib import Path
-from typing import Dict, Any
-import pytest
 from unittest.mock import Mock
 
+import pytest
 from agents.extensions.models.litellm_model import LitellmModel
 
 

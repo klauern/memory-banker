@@ -13,7 +13,9 @@
       "Bash(mv:*)",
       "Bash(uv tool uninstall:*)",
       "Bash(uv tool install:*)",
-      "Bash(memory-banker:*)"
+      "Bash(memory-banker:*)",
+      "Bash(task check)",
+      "Bash(task fix)"
     ],
     "deny": []
   }
