@@ -16,7 +16,8 @@
       "Bash(memory-banker:*)",
       "Bash(task check)",
       "Bash(task fix)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(git fetch:*)"
     ],
     "deny": []
   }
