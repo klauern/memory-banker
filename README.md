@@ -36,13 +36,13 @@ Memory banks are structured documentation files that help AI assistants understa
 #### Option 1: Install as a tool (global)
 
 ```bash
-uv tool install git+https://github.com/yourusername/memory-banker.git
+uv tool install git+https://github.com/klauern/memory-banker.git
 ```
 
 #### Option 2: Development installation
 
 ```bash
-git clone https://github.com/yourusername/memory-banker.git
+git clone https://github.com/klauern/memory-banker.git
 cd memory-banker
 uv sync
 ```
@@ -52,7 +52,7 @@ Both options will make the `memory-banker` command available.
 ### Using pip
 
 ```bash
-git clone https://github.com/yourusername/memory-banker.git
+git clone https://github.com/klauern/memory-banker.git
 cd memory-banker
 pip install -e .
 ```
