@@ -33,7 +33,8 @@
       "Bash(task ci)",
       "Bash(task format)",
       "Bash(task check)",
-      "Bash(task fix)"
+      "Bash(task fix)",
+      "Bash(OPENAI_API_BASE=https://example.com OPENAI_API_KEY=test uv run memory-banker --help)"
     ],
     "deny": []
   }

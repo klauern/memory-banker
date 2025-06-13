@@ -3,10 +3,8 @@ import os
 from pathlib import Path
 
 import click
-from agents.extensions.models.litellm_model import LitellmModel
 from rich.console import Console
 
-from .agents import MemoryBankAgents
 from .memory_bank import MemoryBank
 from .progress import create_simple_tracker
 
@@ -20,6 +18,10 @@ class MemoryBankerCLI:
         api_base: str | None = None,
         timeout: int = 300,
     ):
+        # Import OpenAI agents after potential tracing disable
+        from agents.extensions.models.litellm_model import LitellmModel
+        from .agents import MemoryBankAgents
+        
         self.project_path = project_path
         self.model = model
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
