@@ -33,7 +33,7 @@ class MemoryBank:
         if self.memory_bank_path.exists():
             shutil.rmtree(self.memory_bank_path)
 
-    async def create_files(self, analysis: dict[str, Any]):
+    async def create_files(self, analysis: dict[str, Any], progress_tracker=None):
         """Create all memory bank files based on agent analysis"""
         file_mapping = {
             "projectbrief": "projectbrief.md",
@@ -48,10 +48,19 @@ class MemoryBank:
             if analysis_key in analysis:
                 file_path = self.memory_bank_path / filename
                 content = analysis[analysis_key]
+
+                # Update progress with specific file being written
+                if progress_tracker:
+                    progress_tracker.update(description=f"Writing {filename}")
+
                 file_path.write_text(content, encoding="utf-8")
 
-    async def update_files(self, analysis: dict[str, Any]):
+                # Update progress after file is written
+                if progress_tracker:
+                    progress_tracker.update(advance=1, description=f"Saved {filename}")
+
+    async def update_files(self, analysis: dict[str, Any], progress_tracker=None):
         """Update existing memory bank files"""
         # For now, just recreate all files
         # In the future, we could be smarter about preserving manual edits
-        await self.create_files(analysis)
+        await self.create_files(analysis, progress_tracker)

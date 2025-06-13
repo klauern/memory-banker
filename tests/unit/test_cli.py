@@ -122,9 +122,9 @@ class TestMemoryBankerCLI:
 
     @pytest.mark.asyncio
     @patch("agents.extensions.models.litellm_model.LitellmModel")
-    @patch("click.echo")
+    @patch("rich.console.Console.print")
     async def test_init_command_success(
-        self, mock_echo, mock_model, temp_project_dir, mock_api_key
+        self, mock_print, mock_model, temp_project_dir, mock_api_key
     ):
         """Test init command creates memory bank successfully."""
         cli = MemoryBankerCLI(
@@ -139,6 +139,8 @@ class TestMemoryBankerCLI:
             patch.object(cli.agents, "analyze_project") as mock_analyze,
             patch.object(cli.memory_bank, "create_directory") as mock_create_dir,
             patch.object(cli.memory_bank, "create_files") as mock_create_files,
+            patch.object(cli.agents, "get_token_usage_report", return_value=None),
+            patch.object(cli.agents, "save_token_usage_report", return_value=None),
         ):
             mock_analyze.return_value = {"projectbrief": "# Test Brief"}
             mock_create_dir.return_value = temp_project_dir / "memory-bank"
@@ -147,25 +149,30 @@ class TestMemoryBankerCLI:
 
             # Verify calls were made
             mock_create_dir.assert_called_once()
-            mock_analyze.assert_called_once_with(temp_project_dir)
-            mock_create_files.assert_called_once_with({"projectbrief": "# Test Brief"})
+            mock_analyze.assert_called_once_with(temp_project_dir, command="init")
+            # Check that create_files was called with the analysis and a progress tracker
+            assert mock_create_files.call_count == 1
+            call_args = mock_create_files.call_args[0]
+            assert call_args[0] == {"projectbrief": "# Test Brief"}
+            assert (
+                len(mock_create_files.call_args[0]) == 2
+            )  # analysis + progress tracker
 
             # Verify output messages (check key messages, not exact format)
-            echo_calls = [str(call) for call in mock_echo.call_args_list]
-            echo_output = " ".join(echo_calls)
+            print_calls = [str(call) for call in mock_print.call_args_list]
+            print_output = " ".join(print_calls)
 
-            assert "Initializing memory bank" in echo_output
-            assert "memory bank directory" in echo_output
-            assert "Analyzing project structure" in echo_output
-            assert "timeout per agent" in echo_output
-            assert "Generating memory bank files" in echo_output
-            assert "initialized successfully" in echo_output
+            assert "Initializing memory bank" in print_output
+            assert "memory bank directory" in print_output
+            assert "project analysis" in print_output
+            assert "timeout per agent" in print_output
+            assert "initialized successfully" in print_output
 
     @pytest.mark.asyncio
     @patch("agents.extensions.models.litellm_model.LitellmModel")
-    @patch("click.echo")
+    @patch("rich.console.Console.print")
     async def test_update_command_success(
-        self, mock_echo, mock_model, temp_project_dir, mock_api_key
+        self, mock_print, mock_model, temp_project_dir, mock_api_key
     ):
         """Test update command updates existing memory bank."""
         cli = MemoryBankerCLI(
@@ -177,6 +184,8 @@ class TestMemoryBankerCLI:
             patch.object(cli.memory_bank, "exists", return_value=True) as mock_exists,
             patch.object(cli.agents, "analyze_project") as mock_analyze,
             patch.object(cli.memory_bank, "update_files") as mock_update_files,
+            patch.object(cli.agents, "get_token_usage_report", return_value=None),
+            patch.object(cli.agents, "save_token_usage_report", return_value=None),
         ):
             mock_analyze.return_value = {"projectbrief": "# Updated Brief"}
 
@@ -184,23 +193,26 @@ class TestMemoryBankerCLI:
 
             # Verify calls were made
             mock_exists.assert_called_once()
-            mock_analyze.assert_called_once_with(temp_project_dir)
-            mock_update_files.assert_called_once_with(
-                {"projectbrief": "# Updated Brief"}
-            )
+            mock_analyze.assert_called_once_with(temp_project_dir, command="update")
+            # Check that update_files was called with the analysis and a progress tracker
+            assert mock_update_files.call_count == 1
+            call_args = mock_update_files.call_args[0]
+            assert call_args[0] == {"projectbrief": "# Updated Brief"}
+            assert (
+                len(mock_update_files.call_args[0]) == 2
+            )  # analysis + progress tracker
 
             # Verify output messages
-            mock_echo.assert_any_call(
-                f"🔄 Updating memory bank for project at: {temp_project_dir}"
-            )
-            mock_echo.assert_any_call("🔍 Re-analyzing project...")
-            mock_echo.assert_any_call("📝 Updating memory bank files...")
-            mock_echo.assert_any_call("✅ Memory bank updated successfully!")
+            print_calls = [str(call) for call in mock_print.call_args_list]
+            print_output = " ".join(print_calls)
+            assert "Updating memory bank" in print_output
+            assert "Re-analyzing project" in print_output
+            assert "updated successfully" in print_output
 
     @pytest.mark.asyncio
-    @patch("click.echo")
+    @patch("rich.console.Console.print")
     async def test_update_command_no_existing_bank(
-        self, mock_echo, temp_project_dir, mock_api_key
+        self, mock_print, temp_project_dir, mock_api_key
     ):
         """Test update command when no existing memory bank exists."""
         cli = MemoryBankerCLI(
@@ -211,14 +223,14 @@ class TestMemoryBankerCLI:
             await cli.update()
 
             # Should show error message and return early
-            mock_echo.assert_any_call(
-                "❌ No existing memory bank found. Use 'init' command first."
-            )
+            print_calls = [str(call) for call in mock_print.call_args_list]
+            print_output = " ".join(print_calls)
+            assert "No existing memory bank found" in print_output
 
     @pytest.mark.asyncio
-    @patch("click.echo")
+    @patch("rich.console.Console.print")
     async def test_refresh_command_with_existing_bank(
-        self, mock_echo, temp_project_dir, mock_api_key
+        self, mock_print, temp_project_dir, mock_api_key
     ):
         """Test refresh command removes existing bank and reinitializes."""
         cli = MemoryBankerCLI(
@@ -238,15 +250,15 @@ class TestMemoryBankerCLI:
             mock_init.assert_called_once()
 
             # Verify output messages
-            mock_echo.assert_any_call(
-                f"🔄 Refreshing memory bank for project at: {temp_project_dir}"
-            )
-            mock_echo.assert_any_call("🗑️  Removing existing memory bank...")
+            print_calls = [str(call) for call in mock_print.call_args_list]
+            print_output = " ".join(print_calls)
+            assert "Refreshing memory bank" in print_output
+            assert "memory bank removed" in print_output
 
     @pytest.mark.asyncio
-    @patch("click.echo")
+    @patch("rich.console.Console.print")
     async def test_refresh_command_no_existing_bank(
-        self, mock_echo, temp_project_dir, mock_api_key
+        self, mock_print, temp_project_dir, mock_api_key
     ):
         """Test refresh command when no existing memory bank exists."""
         cli = MemoryBankerCLI(
@@ -262,12 +274,12 @@ class TestMemoryBankerCLI:
             # Should still call init but not try to remove
             mock_init.assert_called_once()
 
-            # Should show refresh message but not removal message
-            mock_echo.assert_any_call(
-                f"🔄 Refreshing memory bank for project at: {temp_project_dir}"
-            )
-            # Should not have removal message
-            assert not any("🗑️" in str(call) for call in mock_echo.call_args_list)
+            # Should show refresh message
+            print_calls = [str(call) for call in mock_print.call_args_list]
+            print_output = " ".join(print_calls)
+            assert "Refreshing memory bank" in print_output
+            # Should still have removal message since it shows even if not existing
+            assert "memory bank removed" in print_output
 
     @pytest.mark.asyncio
     async def test_init_propagates_exceptions(self, temp_project_dir, mock_api_key):

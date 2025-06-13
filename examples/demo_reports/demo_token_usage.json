@@ -1,0 +1,89 @@
+{
+  "session_id": "10281764-f4ab-4252-bc57-08eada83483b",
+  "project_path": "/example/project",
+  "model": "gpt-4o-mini",
+  "command": "demo",
+  "start_time": "2025-06-12T18:54:50.136691",
+  "end_time": "2025-06-12T18:54:50.756165",
+  "total_duration_seconds": 0.619474,
+  "total_prompt_tokens": 8500,
+  "total_completion_tokens": 5250,
+  "total_tokens": 13750,
+  "total_cost_usd": 0.07375,
+  "successful_agents": 6,
+  "failed_agents": 0,
+  "agent_usage": [
+    {
+      "agent_name": "projectbrief",
+      "prompt_tokens": 1200,
+      "completion_tokens": 800,
+      "total_tokens": 2000,
+      "model": "gpt-4o-mini",
+      "start_time": "2025-06-12T18:54:50.136697",
+      "end_time": "2025-06-12T18:54:50.241744",
+      "duration_seconds": 0.105047,
+      "success": true,
+      "error": null
+    },
+    {
+      "agent_name": "productContext",
+      "prompt_tokens": 1500,
+      "completion_tokens": 1200,
+      "total_tokens": 2700,
+      "model": "gpt-4o-mini",
+      "start_time": "2025-06-12T18:54:50.241755",
+      "end_time": "2025-06-12T18:54:50.346927",
+      "duration_seconds": 0.105172,
+      "success": true,
+      "error": null
+    },
+    {
+      "agent_name": "systemPatterns",
+      "prompt_tokens": 1800,
+      "completion_tokens": 1000,
+      "total_tokens": 2800,
+      "model": "gpt-4o-mini",
+      "start_time": "2025-06-12T18:54:50.346958",
+      "end_time": "2025-06-12T18:54:50.447278",
+      "duration_seconds": 0.10032,
+      "success": true,
+      "error": null
+    },
+    {
+      "agent_name": "techContext",
+      "prompt_tokens": 1600,
+      "completion_tokens": 900,
+      "total_tokens": 2500,
+      "model": "gpt-4o-mini",
+      "start_time": "2025-06-12T18:54:50.447321",
+      "end_time": "2025-06-12T18:54:50.549910",
+      "duration_seconds": 0.102589,
+      "success": true,
+      "error": null
+    },
+    {
+      "agent_name": "activeContext",
+      "prompt_tokens": 1400,
+      "completion_tokens": 750,
+      "total_tokens": 2150,
+      "model": "gpt-4o-mini",
+      "start_time": "2025-06-12T18:54:50.549944",
+      "end_time": "2025-06-12T18:54:50.654182",
+      "duration_seconds": 0.104238,
+      "success": true,
+      "error": null
+    },
+    {
+      "agent_name": "progress",
+      "prompt_tokens": 1000,
+      "completion_tokens": 600,
+      "total_tokens": 1600,
+      "model": "gpt-4o-mini",
+      "start_time": "2025-06-12T18:54:50.654222",
+      "end_time": "2025-06-12T18:54:50.756138",
+      "duration_seconds": 0.101916,
+      "success": true,
+      "error": null
+    }
+  ]
+}

@@ -24,7 +24,16 @@
       "Bash(timeout 30 uv run:*)",
       "Bash(timeout 10 uv run:*)",
       "WebFetch(domain:openai.github.io)",
-      "Bash(timeout 15 uv run:*)"
+      "Bash(timeout 15 uv run:*)",
+      "Bash(task test)",
+      "Bash(task install)",
+      "Bash(task check)",
+      "Bash(task fix)",
+      "Bash(task test)",
+      "Bash(task ci)",
+      "Bash(task format)",
+      "Bash(task check)",
+      "Bash(task fix)"
     ],
     "deny": []
   }
