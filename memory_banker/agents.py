@@ -1,9 +1,13 @@
 import asyncio
+import uuid
 from pathlib import Path
 from typing import Any
 
 from agents import Agent, Runner, function_tool
 from agents.extensions.models.litellm_model import LitellmModel
+
+from .progress import create_agent_tracker
+from .token_tracking import TokenTracker
 
 
 class MemoryBankAgents:
@@ -12,29 +16,38 @@ class MemoryBankAgents:
     def __init__(self, llm_model: LitellmModel, timeout: int = 300):
         self.llm_model = llm_model
         self.timeout = timeout
+        self.token_tracker = None
 
-    async def analyze_project(self, project_path: Path) -> dict[str, Any]:
+    async def analyze_project(
+        self, project_path: Path, command: str = "analyze"
+    ) -> dict[str, Any]:
         """Analyze a project and generate memory bank content using specialized agents"""
 
-        # Get project context
-        project_context = self._get_project_context(project_path)
+        # Initialize token tracking
+        session_id = str(uuid.uuid4())
+        self.token_tracker = TokenTracker(
+            session_id=session_id,
+            project_path=str(project_path),
+            model=self.llm_model.model,
+            command=command,
+        )
 
-        # Create specialized agents for each memory bank file
-        agents_tasks = [
+        # Define all agents for progress tracking (including project analysis)
+        all_agents = [
+            (
+                "project_analysis",
+                None,  # No agent needed, just project context gathering
+                "Analyzing project structure and context",
+            ),
             (
                 "projectbrief",
                 self._create_project_brief_agent(),
-                "Generate a comprehensive project brief",
+                "Generate comprehensive project brief",
             ),
             (
                 "productContext",
                 self._create_product_context_agent(),
-                "Analyze the product context and problem space",
-            ),
-            (
-                "activeContext",
-                self._create_active_context_agent(),
-                "Determine current development context",
+                "Analyze product context and problem space",
             ),
             (
                 "systemPatterns",
@@ -47,91 +60,338 @@ class MemoryBankAgents:
                 "Document technical context and setup",
             ),
             (
+                "activeContext",
+                self._create_active_context_agent(),
+                "Determine current development context",
+            ),
+            (
                 "progress",
                 self._create_progress_agent(),
                 "Assess project progress and status",
             ),
         ]
 
-        # Run all agents with timeout
-        results = {}
-        for file_type, agent, description in agents_tasks:
-            print(f"🤖 {description}...")
-            try:
-                # Apply timeout to the agent execution
-                result = await asyncio.wait_for(
-                    Runner.run(agent, project_context), timeout=self.timeout
-                )
+        # Create progress tracker and add all agents
+        tracker = create_agent_tracker()
+        for file_type, _, description in all_agents:
+            tracker.add_agent(file_type, description)
 
-                # Extract the actual text content from the RunResult
-                if hasattr(result, "text"):
-                    content = result.text
-                elif hasattr(result, "value"):
-                    content = result.value
+        # Run with live progress display
+        with tracker.live_display() as live_tracker:
+            # Phase 0: Project Analysis (immediate feedback)
+            live_tracker.start_agent(
+                "project_analysis", "Scanning project structure..."
+            )
+            await asyncio.sleep(0.1)
+
+            live_tracker.update_agent("project_analysis", "Reading key files...")
+            project_context = await self._get_project_context_async(
+                project_path, live_tracker
+            )
+
+            live_tracker.complete_agent("project_analysis", success=True)
+            await asyncio.sleep(0.2)
+
+            # Phase 1: Foundation agents (can run in parallel)
+            phase1_agents = all_agents[1:5]  # Skip project_analysis, take next 4
+
+            # Start Phase 1 agents
+            phase1_tasks = []
+            for file_type, agent, description in phase1_agents:
+                live_tracker.start_agent(file_type, "Starting parallel execution...")
+                # Small delay to ensure display updates are visible
+                await asyncio.sleep(0.1)
+                task = asyncio.create_task(
+                    self._run_agent_with_tracker(
+                        agent, project_context, file_type, description, live_tracker
+                    )
+                )
+                phase1_tasks.append((file_type, task))
+
+            # Wait for all Phase 1 agents to complete
+            phase1_results = {}
+            for file_type, task in phase1_tasks:
+                phase1_results[file_type] = await task
+
+            # Phase 2: Context-dependent agents (run sequentially)
+
+            # Create enhanced context for Phase 2 agents
+            enhanced_context = self._create_enhanced_context(
+                project_context, phase1_results
+            )
+
+            # Run activeContext agent (depends on Phase 1 results)
+            live_tracker.start_agent(
+                "activeContext", "Waiting for Phase 1 completion..."
+            )
+            active_context_result = await self._run_agent_with_tracker(
+                self._create_active_context_agent(),
+                enhanced_context,
+                "activeContext",
+                "Determine current development context",
+                live_tracker,
+            )
+
+            # Run progress agent (depends on activeContext)
+            live_tracker.start_agent("progress", "Waiting for active context...")
+            progress_context = (
+                enhanced_context
+                + f"\n\n=== ACTIVE CONTEXT ===\n{active_context_result}"
+            )
+            progress_result = await self._run_agent_with_tracker(
+                self._create_progress_agent(),
+                progress_context,
+                "progress",
+                "Assess project progress and status",
+                live_tracker,
+            )
+
+            # Combine all results (exclude project_analysis as it's not a memory bank file)
+            results = phase1_results
+            results["activeContext"] = active_context_result
+            results["progress"] = progress_result
+
+            return results
+
+    async def _run_agent_with_tracker(
+        self, agent: Agent, context: str, file_type: str, description: str, tracker
+    ) -> str:
+        """Run a single agent with progress tracking"""
+
+        # Start token tracking for this agent
+        agent_usage = None
+        if self.token_tracker:
+            agent_usage = self.token_tracker.start_agent(file_type)
+
+        try:
+            tracker.update_agent(file_type, "Initializing AI agent...")
+            # Brief delay to show initialization
+            await asyncio.sleep(0.2)
+
+            tracker.update_agent(file_type, "Running AI analysis...")
+
+            # Apply timeout to the agent execution
+            result = await asyncio.wait_for(
+                Runner.run(agent, context), timeout=self.timeout
+            )
+
+            tracker.update_agent(file_type, "Extracting content...")
+
+            # Extract the actual text content from the RunResult
+            if hasattr(result, "text"):
+                content = result.text
+            elif hasattr(result, "value"):
+                content = result.value
+            else:
+                # Parse the string representation to extract the content
+                result_str = str(result)
+                if "Final output (str):" in result_str:
+                    lines = result_str.split("\n")
+                    content_lines = []
+                    in_content = False
+                    for line in lines:
+                        if "Final output (str):" in line:
+                            in_content = True
+                            continue
+                        elif in_content and (
+                            line.startswith("- ") or line.startswith("(See")
+                        ):
+                            break
+                        elif in_content:
+                            # Remove the leading spaces that are part of the indentation
+                            if line.startswith("    "):
+                                content_lines.append(line[4:])
+                            else:
+                                content_lines.append(line)
+                    content = "\n".join(content_lines).strip()
                 else:
-                    # Parse the string representation to extract the content
-                    result_str = str(result)
-                    if "Final output (str):" in result_str:
-                        lines = result_str.split("\n")
-                        content_lines = []
-                        in_content = False
-                        for line in lines:
-                            if "Final output (str):" in line:
-                                in_content = True
-                                continue
-                            elif in_content and (
-                                line.startswith("- ") or line.startswith("(See")
-                            ):
-                                break
-                            elif in_content:
-                                # Remove the leading spaces that are part of the indentation
-                                if line.startswith("    "):
-                                    content_lines.append(line[4:])
-                                else:
-                                    content_lines.append(line)
-                        content = "\n".join(content_lines).strip()
-                    else:
-                        content = result_str
+                    content = result_str
 
-                results[file_type] = content
+            # Finish token tracking for successful execution
+            if self.token_tracker and agent_usage:
+                self.token_tracker.finish_agent(agent_usage, result)
 
-            except TimeoutError:
-                print(f"⚠️  {description} timed out after {self.timeout} seconds")
-                results[file_type] = (
-                    f"# {file_type.title()} (Generation Timed Out)\n\nThe agent timed out while generating this content. Please try again with a longer timeout using --timeout option."
-                )
-            except Exception as e:
-                print(f"❌ {description} failed: {str(e)}")
+            # Update final status to show content ready
+            tracker.update_agent(file_type, f"Content ready for {file_type}.md")
+            await asyncio.sleep(0.1)  # Brief pause to show the final status
+            tracker.complete_agent(file_type, success=True)
+            return content
 
-                # Check for tracing-related errors and provide helpful suggestions
-                error_msg = str(e).lower()
-                if any(
-                    keyword in error_msg
-                    for keyword in [
-                        "tracing",
-                        "traces",
-                        "401",
-                        "unauthorized",
-                        "authentication",
-                    ]
-                ):
-                    print("💡 This error might be related to OpenAI Agents tracing.")
-                    print("   Try setting: export OPENAI_AGENTS_DISABLE_TRACING=1")
-                    print("   Or use a custom API base that handles tracing properly.")
+        except TimeoutError:
+            error_msg = f"Timed out after {self.timeout} seconds"
+            # Finish token tracking for timeout
+            if self.token_tracker and agent_usage:
+                self.token_tracker.finish_agent(agent_usage, error=error_msg)
 
-                results[file_type] = (
-                    f"# {file_type.title()} (Generation Failed)\n\n"
-                    f"The agent failed with error: {str(e)}\n\n"
-                    f"If this is a tracing or authentication error, try:\n"
-                    f"1. Set `export OPENAI_AGENTS_DISABLE_TRACING=1`\n"
-                    f"2. Verify your API key and base URL are correct\n"
-                    f"3. Check that your proxy supports OpenAI Agents tracing endpoints"
-                )
+            tracker.complete_agent(file_type, success=False, error=error_msg)
+            return f"# {file_type.title()} (Generation Timed Out)\n\nThe agent timed out while generating this content. Please try again with a longer timeout using --timeout option."
+        except Exception as e:
+            error_msg = str(e)
+            # Finish token tracking for error
+            if self.token_tracker and agent_usage:
+                self.token_tracker.finish_agent(agent_usage, error=error_msg)
 
-        return results
+            tracker.complete_agent(file_type, success=False, error=error_msg)
+
+            # Check for tracing-related errors
+            error_msg_lower = error_msg.lower()
+            if any(
+                keyword in error_msg_lower
+                for keyword in [
+                    "tracing",
+                    "traces",
+                    "401",
+                    "unauthorized",
+                    "authentication",
+                ]
+            ):
+                tracker.update_agent(file_type, "Auth/tracing error - check setup")
+
+            return (
+                f"# {file_type.title()} (Generation Failed)\n\n"
+                f"The agent failed with error: {error_msg}\n\n"
+                f"If this is a tracing or authentication error, try:\n"
+                f"1. Set `export OPENAI_AGENTS_DISABLE_TRACING=1`\n"
+                f"2. Verify your API key and base URL are correct\n"
+                f"3. Check that your proxy supports OpenAI Agents tracing endpoints"
+            )
+
+    async def _run_agent_with_timeout(
+        self, agent: Agent, context: str, file_type: str, description: str
+    ) -> str:
+        """Legacy method - run a single agent with timeout and error handling"""
+        try:
+            # Apply timeout to the agent execution
+            result = await asyncio.wait_for(
+                Runner.run(agent, context), timeout=self.timeout
+            )
+
+            # Extract the actual text content from the RunResult
+            if hasattr(result, "text"):
+                content = result.text
+            elif hasattr(result, "value"):
+                content = result.value
+            else:
+                # Parse the string representation to extract the content
+                result_str = str(result)
+                if "Final output (str):" in result_str:
+                    lines = result_str.split("\n")
+                    content_lines = []
+                    in_content = False
+                    for line in lines:
+                        if "Final output (str):" in line:
+                            in_content = True
+                            continue
+                        elif in_content and (
+                            line.startswith("- ") or line.startswith("(See")
+                        ):
+                            break
+                        elif in_content:
+                            # Remove the leading spaces that are part of the indentation
+                            if line.startswith("    "):
+                                content_lines.append(line[4:])
+                            else:
+                                content_lines.append(line)
+                    content = "\n".join(content_lines).strip()
+                else:
+                    content = result_str
+
+            return content
+
+        except TimeoutError:
+            print(f"⚠️  {description} timed out after {self.timeout} seconds")
+            return f"# {file_type.title()} (Generation Timed Out)\n\nThe agent timed out while generating this content. Please try again with a longer timeout using --timeout option."
+        except Exception as e:
+            print(f"❌ {description} failed: {str(e)}")
+
+            # Check for tracing-related errors and provide helpful suggestions
+            error_msg = str(e).lower()
+            if any(
+                keyword in error_msg
+                for keyword in [
+                    "tracing",
+                    "traces",
+                    "401",
+                    "unauthorized",
+                    "authentication",
+                ]
+            ):
+                print("💡 This error might be related to OpenAI Agents tracing.")
+                print("   Try setting: export OPENAI_AGENTS_DISABLE_TRACING=1")
+                print("   Or use a custom API base that handles tracing properly.")
+
+            return (
+                f"# {file_type.title()} (Generation Failed)\n\n"
+                f"The agent failed with error: {str(e)}\n\n"
+                f"If this is a tracing or authentication error, try:\n"
+                f"1. Set `export OPENAI_AGENTS_DISABLE_TRACING=1`\n"
+                f"2. Verify your API key and base URL are correct\n"
+                f"3. Check that your proxy supports OpenAI Agents tracing endpoints"
+            )
+
+    def _create_enhanced_context(
+        self, project_context: str, phase1_results: dict[str, str]
+    ) -> str:
+        """Create enhanced context for Phase 2 agents by including Phase 1 results"""
+        enhanced_context = project_context
+
+        # Add Phase 1 results as additional context
+        if "projectbrief" in phase1_results:
+            enhanced_context += (
+                f"\n\n=== PROJECT BRIEF ===\n{phase1_results['projectbrief']}"
+            )
+
+        if "productContext" in phase1_results:
+            enhanced_context += (
+                f"\n\n=== PRODUCT CONTEXT ===\n{phase1_results['productContext']}"
+            )
+
+        if "systemPatterns" in phase1_results:
+            enhanced_context += (
+                f"\n\n=== SYSTEM PATTERNS ===\n{phase1_results['systemPatterns']}"
+            )
+
+        if "techContext" in phase1_results:
+            enhanced_context += (
+                f"\n\n=== TECH CONTEXT ===\n{phase1_results['techContext']}"
+            )
+
+        return enhanced_context
+
+    async def _get_project_context_async(self, project_path: Path, tracker) -> str:
+        """Get comprehensive project context for analysis with progress updates"""
+        tracker.update_agent("project_analysis", "Scanning project structure...")
+        await asyncio.sleep(0.1)
+        project_structure = self._get_project_structure(project_path)
+
+        tracker.update_agent("project_analysis", "Reading key project files...")
+        await asyncio.sleep(0.1)
+        key_files = self._read_key_files(project_path)
+
+        tracker.update_agent("project_analysis", "Gathering git information...")
+        await asyncio.sleep(0.1)
+        git_info = self._get_git_info(project_path)
+
+        return f"""
+PROJECT ANALYSIS CONTEXT
+
+Project Path: {project_path}
+Project Name: {project_path.name}
+
+=== PROJECT STRUCTURE ===
+{project_structure}
+
+=== KEY FILES CONTENT ===
+{key_files}
+
+=== GIT INFORMATION ===
+{git_info}
+
+Please analyze this project thoroughly to understand its purpose, architecture, current state, and context.
+"""
 
     def _get_project_context(self, project_path: Path) -> str:
-        """Get comprehensive project context for analysis"""
+        """Get comprehensive project context for analysis (legacy sync version)"""
         project_structure = self._get_project_structure(project_path)
         key_files = self._read_key_files(project_path)
         git_info = self._get_git_info(project_path)
@@ -752,3 +1012,16 @@ Format as complete markdown with specific examples and quantifiable progress ind
                 pass
 
         return "\n".join(deps) if deps else "Dependencies to be analyzed"
+
+    def get_token_usage_report(self, pricing_config: dict = None):
+        """Get the token usage report for the current session"""
+        if self.token_tracker:
+            return self.token_tracker.finish_session(pricing_config)
+        return None
+
+    def save_token_usage_report(self, project_path: Path, filename: str = None):
+        """Save token usage report to project directory"""
+        if self.token_tracker:
+            reports_dir = project_path / "memory-bank" / "token-reports"
+            return self.token_tracker.save_report(reports_dir, filename)
+        return None
