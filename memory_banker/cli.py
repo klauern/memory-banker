@@ -20,6 +20,7 @@ class MemoryBankerCLI:
     ):
         # Import OpenAI agents after potential tracing disable
         from agents.extensions.models.litellm_model import LitellmModel
+
         from .agents import MemoryBankAgents
 
         self.project_path = project_path
