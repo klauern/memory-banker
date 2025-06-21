@@ -1,0 +1,69 @@
+name: Dependabot Auto-Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: Install dependencies
+        run: uv sync --dev
+      
+      - name: Run quality checks
+        run: |
+          uv run task check
+          uv run task test
+      
+      - name: Check if PR is eligible for auto-merge
+        id: check-merge
+        run: |
+          # Get PR title to determine update type
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          
+          # Check if this is a minor or patch update (not major)
+          if echo "$PR_TITLE" | grep -E "(bump|update).*from.*to.*" | grep -vE "from [0-9]+\.[0-9]+\.[0-9]+ to [0-9]*[0-9]+\.[0-9]+\.[0-9]+"; then
+            echo "eligible=true" >> $GITHUB_OUTPUT
+            echo "This appears to be a minor/patch update, eligible for auto-merge"
+          else
+            echo "eligible=false" >> $GITHUB_OUTPUT
+            echo "This appears to be a major update or not a standard dependency update, requires manual review"
+          fi
+          
+          # Also check labels for safety
+          LABELS="${{ join(github.event.pull_request.labels.*.name, ' ') }}"
+          if echo "$LABELS" | grep -q "manual-review-required"; then
+            echo "eligible=false" >> $GITHUB_OUTPUT
+            echo "Manual review required based on labels"
+          fi
+      
+      - name: Enable auto-merge for eligible PRs
+        if: success() && steps.check-merge.outputs.eligible == 'true'
+        run: |
+          gh pr merge --auto --squash --delete-branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Add comment for ineligible PRs
+        if: steps.check-merge.outputs.eligible == 'false'
+        run: |
+          gh pr comment --body "🤖 This PR requires manual review and cannot be auto-merged. Please review the changes before merging."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
