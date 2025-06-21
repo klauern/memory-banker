@@ -1,0 +1,97 @@
+version: 2
+updates:
+  # Python dependencies in pyproject.toml
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/Chicago"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "klauern"
+    assignees:
+      - "klauern"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "dev-deps"
+      include: "scope"
+    # Group Python dependencies for easier management
+    groups:
+      python-minor-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+        exclude-patterns:
+          - "openai-agents*"  # Keep AI-related updates separate for review
+    # Ignore major version updates to prevent breaking changes
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "06:00"
+      timezone: "America/Chicago"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "klauern"
+    assignees:
+      - "klauern"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    # Group all GitHub Actions updates together
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # AI/ML dependencies that need manual review
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "06:00"
+      timezone: "America/Chicago"
+    open-pull-requests-limit: 2
+    reviewers:
+      - "klauern"
+    assignees:
+      - "klauern"
+    labels:
+      - "dependencies"
+      - "ai-dependencies"
+      - "manual-review-required"
+    commit-message:
+      prefix: "ai-deps"
+      include: "scope"
+    # Only target AI-related dependencies
+    allow:
+      - dependency-name: "openai-agents*"
+      - dependency-name: "*llm*"
+      - dependency-name: "litellm*"
+    # Group AI dependencies separately
+    groups:
+      ai-dependencies:
+        patterns:
+          - "openai-agents*"
+          - "*llm*"
+          - "litellm*"

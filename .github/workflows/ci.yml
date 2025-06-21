@@ -5,6 +5,9 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  # Weekly dependency check schedule
+  schedule:
+    - cron: '0 6 * * MON'  # 6 AM Monday (matches Dependabot schedule)
 
 jobs:
   format:
